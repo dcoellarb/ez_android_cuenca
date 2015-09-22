@@ -20,6 +20,9 @@ import com.parse.ParseAnalytics;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
+import com.pubnub.api.Callback;
+import com.pubnub.api.PubnubError;
+import com.pubnub.api.PubnubException;
 
 import java.util.List;
 
@@ -40,6 +43,21 @@ public class MainActivity extends AppCompatActivity {
         loadPedidos();
 
         ParseAnalytics.trackAppOpenedInBackground(getIntent());
+
+        /* Subscribe to the demo_tutorial channel */
+        try {
+            ((EasyRutaApplication)getApplication()).getPubnub().subscribe("new_pedido", new Callback() {
+                public void successCallback(String channel, Object message) {
+                    loadPedidos();
+                }
+
+                public void errorCallback(String channel, PubnubError error) {
+                    Log.e("ERROR",error.getErrorString());
+                }
+            });
+        } catch (PubnubException e) {
+            e.printStackTrace();
+        }
     }
 
     private void loadPedidos(){
