@@ -20,6 +20,7 @@ import com.parse.ParseAnalytics;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
+import com.parse.SaveCallback;
 import com.pubnub.api.Callback;
 import com.pubnub.api.PubnubError;
 import com.pubnub.api.PubnubException;
@@ -41,10 +42,11 @@ public class MainActivity extends AppCompatActivity {
 
         pedidosList  = (ListView)findViewById(R.id.pedidos_list);
         loadPedidos();
-
+        pubNubSuscriptions();
         ParseAnalytics.trackAppOpenedInBackground(getIntent());
+    }
 
-        /* Subscribe to the demo_tutorial channel */
+    private void pubNubSuscriptions(){
         try {
             ((EasyRutaApplication)getApplication()).getPubnub().subscribe("new_pedido", new Callback() {
                 public void successCallback(String channel, Object message) {
@@ -55,9 +57,31 @@ public class MainActivity extends AppCompatActivity {
                     Log.e("ERROR",error.getErrorString());
                 }
             });
+
+            ((EasyRutaApplication)getApplication()).getPubnub().subscribe("pedido_tomado", new Callback() {
+                public void successCallback(String channel, Object message) {
+                    loadPedidos();
+                }
+
+                public void errorCallback(String channel, PubnubError error) {
+                    Log.e("ERROR",error.getErrorString());
+                }
+            });
+
+            ((EasyRutaApplication)getApplication()).getPubnub().subscribe("pedido_rechazado", new Callback() {
+                public void successCallback(String channel, Object message) {
+                    loadPedidos();
+                }
+
+                public void errorCallback(String channel, PubnubError error) {
+                    Log.e("ERROR",error.getErrorString());
+                }
+            });
+
         } catch (PubnubException e) {
             e.printStackTrace();
         }
+
     }
 
     private void loadPedidos(){
@@ -155,18 +179,31 @@ public class MainActivity extends AppCompatActivity {
 
                     ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
                     query.getInBackground(((ParseObject) view.getTag()).getObjectId().toString(), new GetCallback<ParseObject>() {
-                        public void done(ParseObject pedido, ParseException e) {
+                        public void done(final ParseObject pedido, ParseException e) {
                             if (e == null) {
                                 //TODO - check if status is still pending
+                                final EasyRutaApplication application = (EasyRutaApplication)getApplication();
 
                                 pedido.put("Estado", "PendienteConfirmacion");
                                 pedido.put("Transportista", transportista);
-                                pedido.saveInBackground();
+                                pedido.saveInBackground(new SaveCallback() {
+                                    @Override
+                                    public void done(ParseException e) {
+                                        if (e == null) {
+                                            Toast toast = Toast.makeText(getBaseContext(), "Failure", Toast.LENGTH_LONG);
+                                            toast.show();
+
+                                            application.getPubnub().publish("pedido_tomado", pedido.getObjectId().toString(), new Callback() {
+                                            });
+
+                                        } else {
+                                            Toast toast = Toast.makeText(getBaseContext(), transportista.getObjectId().toString(), Toast.LENGTH_LONG);
+                                            toast.show();
+                                        }
+                                    }
+                                });
 
                                 //TODO - add callback to update ui and save pedido in app
-
-                                Toast toast = Toast.makeText(getBaseContext(), transportista.getObjectId().toString(), Toast.LENGTH_LONG);
-                                toast.show();
                             }
                         }
                     });
