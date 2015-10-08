@@ -5,8 +5,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 
 import com.parse.FindCallback;
 import com.parse.LogInCallback;
@@ -42,7 +42,7 @@ public class LoginActivity extends Activity{
 
         final EditText login = (EditText)findViewById(R.id.login_user);
         final EditText password = (EditText)findViewById(R.id.login_password);
-        Button btnLogin = (Button)findViewById(R.id.login_login);
+        LinearLayout btnLogin = (LinearLayout)findViewById(R.id.login_login);
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

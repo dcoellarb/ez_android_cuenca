@@ -5,4 +5,9 @@
         <!-- Customize your theme here. -->
     </style>
 
+    <style name="EditTextCustomHolo" parent="android:Widget.EditText">
+        <item name="android:background">@color/orange</item>
+        <item name="android:textColor">@color/grey</item>
+    </style>
+
 </resources>
