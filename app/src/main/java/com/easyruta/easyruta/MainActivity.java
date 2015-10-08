@@ -1,5 +1,7 @@
 package com.easyruta.easyruta;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -8,7 +10,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.BaseAdapter;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -31,24 +36,28 @@ public class MainActivity extends AppCompatActivity {
 
     private LayoutInflater inflater;
     ListView pedidosList;
+    private Activity activity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
+        activity = this;
 
         inflater = getLayoutInflater();
 
         pedidosList  = (ListView)findViewById(R.id.pedidos_list);
+
         loadPedidos();
+
         pubNubSuscriptions();
+
         ParseAnalytics.trackAppOpenedInBackground(getIntent());
     }
 
     private void pubNubSuscriptions(){
         try {
-            ((EasyRutaApplication)getApplication()).getPubnub().subscribe("new_pedido", new Callback() {
+            ((EasyRutaApplication)getApplication()).getPubnub().subscribe(getString(R.string.status_pedido_new_pedidos), new Callback() {
                 public void successCallback(String channel, Object message) {
                     loadPedidos();
                 }
@@ -58,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-            ((EasyRutaApplication)getApplication()).getPubnub().subscribe("pedido_tomado", new Callback() {
+            ((EasyRutaApplication)getApplication()).getPubnub().subscribe(getString(R.string.status_pedido_tomado), new Callback() {
                 public void successCallback(String channel, Object message) {
                     loadPedidos();
                 }
@@ -68,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-            ((EasyRutaApplication)getApplication()).getPubnub().subscribe("pedido_rechazado", new Callback() {
+            ((EasyRutaApplication)getApplication()).getPubnub().subscribe(getString(R.string.status_pedido_rechazado), new Callback() {
                 public void successCallback(String channel, Object message) {
                     loadPedidos();
                 }
@@ -78,6 +87,25 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
+            ((EasyRutaApplication)getApplication()).getPubnub().subscribe(getString(R.string.status_pedido_cancelado_transportista), new Callback() {
+                public void successCallback(String channel, Object message) {
+                    loadPedidos();
+                }
+
+                public void errorCallback(String channel, PubnubError error) {
+                    Log.e("ERROR",error.getErrorString());
+                }
+            });
+
+            ((EasyRutaApplication)getApplication()).getPubnub().subscribe(getString(R.string.status_pedido_cancelado), new Callback() {
+                public void successCallback(String channel, Object message) {
+                    loadPedidos();
+                }
+
+                public void errorCallback(String channel, PubnubError error) {
+                    Log.e("ERROR",error.getErrorString());
+                }
+            });
         } catch (PubnubException e) {
             e.printStackTrace();
         }
@@ -86,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void loadPedidos(){
         ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
-        query.whereEqualTo("Estado", "Pendiente");
+        query.whereEqualTo("Estado", getString(R.string.status_parse_pendiente));
         query.findInBackground(new FindCallback<ParseObject>() {
             public void done(List<ParseObject> pedidos, ParseException e) {
                 if (e == null) {
@@ -146,9 +174,10 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public View getView(int i, View convertView, ViewGroup parent) {
-            convertView = inflater.inflate(R.layout.pendidos_item,parent,false);
-            TextView text = (TextView)convertView.findViewById(R.id.pendido_viaje);
 
+            convertView = inflater.inflate(R.layout.pendidos_item,parent,false);
+
+            TextView text = (TextView)convertView.findViewById(R.id.pedido_viaje);
             try{
                 String origen  = pedidos.get(i).getParseObject("CiudadOrigen").fetchIfNeeded().getString("Nombre");
                 String destino  = pedidos.get(i).getParseObject("CiudadDestino").fetchIfNeeded().getString("Nombre");
@@ -157,21 +186,30 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
 
-            final LinearLayout detail = (LinearLayout)convertView.findViewById(R.id.pedido_detail);
-            TextView tomar = (TextView)detail.findViewById(R.id.pedido_tomar);
-            tomar.setTag(pedidos.get(i));
-
-            text.setOnClickListener(new View.OnClickListener() {
+            final LinearLayout header = (LinearLayout)convertView.findViewById(R.id.pedido_header);
+            header.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    LinearLayout detail = (LinearLayout)((FrameLayout)header.getParent()).findViewById(R.id.pedido_detail);
+                    LinearLayout separator = (LinearLayout)((FrameLayout)header.getParent()).findViewById(R.id.pedido_separator);
+
                     if (detail.getVisibility() == View.GONE) {
                         detail.setVisibility(View.VISIBLE);
+                        Animation animation = AnimationUtils.loadAnimation(activity, R.anim.expand);
+                        animation.setDuration(500);
+                        detail.setAnimation(animation);
+                        detail.animate();
+                        animation.start();
+                        separator.setVisibility(View.VISIBLE);
                     } else {
                         detail.setVisibility(View.GONE);
+                        separator.setVisibility(View.GONE);
                     }
                 }
             });
 
+            LinearLayout tomar = (LinearLayout)convertView.findViewById(R.id.pedido_tomar);
+            tomar.setTag(pedidos.get(i));
             tomar.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -184,17 +222,18 @@ public class MainActivity extends AppCompatActivity {
                                 //TODO - check if status is still pending
                                 final EasyRutaApplication application = (EasyRutaApplication)getApplication();
 
-                                pedido.put("Estado", "PendienteConfirmacion");
+                                pedido.put("Estado", getString(R.string.status_parse_pendiente_confirmacion));
                                 pedido.put("Transportista", transportista);
                                 pedido.saveInBackground(new SaveCallback() {
                                     @Override
                                     public void done(ParseException e) {
                                         if (e == null) {
-                                            Toast toast = Toast.makeText(getBaseContext(), "Failure", Toast.LENGTH_LONG);
-                                            toast.show();
-
-                                            application.getPubnub().publish("pedido_tomado", pedido.getObjectId().toString(), new Callback() {
+                                            application.getPubnub().publish(getString(R.string.status_pedido_tomado), pedido.getObjectId().toString(), new Callback() {
                                             });
+
+                                            Intent intent = new Intent(activity, PedidoPendiente.class);
+                                            intent.putExtra(PedidoPendiente.PARAM_ID,pedido.getObjectId());
+                                            startActivity(intent);
 
                                         } else {
                                             Toast toast = Toast.makeText(getBaseContext(), transportista.getObjectId().toString(), Toast.LENGTH_LONG);

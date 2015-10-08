@@ -53,7 +53,7 @@ public class LoginActivity extends Activity{
                             ((EasyRutaApplication) getApplication()).setUser(user);
                             SetTransportisa(user);
                         } else {
-                            Log.e("ERROR", "Error singing up");
+                            Log.e("ERROR", "Error singing up:" + e.getMessage());
                         }
                     }
                 });
@@ -65,10 +65,10 @@ public class LoginActivity extends Activity{
         final Activity activity = this;
 
         ParseQuery<ParseObject> query = ParseQuery.getQuery("Transportista");
-        query.whereEqualTo("User", user);
+        query.whereEqualTo("user", user);
         query.findInBackground(new FindCallback<ParseObject>() {
             public void done(List<ParseObject> transportista, ParseException e) {
-                if (e == null) {
+                if (e == null && transportista.size() > 0) {
                     Log.d("ERROR", "Transportista found found:" + transportista.get(0).getObjectId());
                     ((EasyRutaApplication)getApplication()).setTransportista(transportista.get(0));
                     Intent intent = new Intent(activity, MainActivity.class);

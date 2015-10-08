@@ -3,7 +3,6 @@ package com.easyruta.easyruta;
 import android.app.Application;
 
 import com.parse.Parse;
-import com.parse.ParseACL;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
 import com.pubnub.api.Pubnub;
@@ -27,11 +26,11 @@ public class EasyRutaApplication extends Application  {
         // Add your initialization code here
         Parse.initialize(this, "LRW3NBrk3JYLeAkXrpTF2TV0bDPn5HQTndrao8my", "r0lEQ4CUuYsOUQcqyRQXGjScxXn1Bbq3V6OfA3ly");
 
-        ParseUser.enableAutomaticUser();
-        ParseACL defaultACL = new ParseACL();
+        //ParseUser.enableAutomaticUser();
+        //ParseACL defaultACL = new ParseACL();
         // Optionally enable public read access.
         // defaultACL.setPublicReadAccess(true);
-        ParseACL.setDefaultACL(defaultACL, true);
+        //ParseACL.setDefaultACL(defaultACL, true);
 
         pubnub = new Pubnub("pub-c-ecec5777-242f-4a3e-8689-9b272441bb11", "sub-c-5327f6bc-60c6-11e5-b0b1-0619f8945a4f");
     }
