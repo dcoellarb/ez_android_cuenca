@@ -15,7 +15,7 @@
             android:id="@+id/pedido_detail"
             android:layout_marginTop="91dp"
             android:layout_width="match_parent"
-            android:layout_height="120dp"
+            android:layout_height="130dp"
             android:paddingTop="10dp"
             android:paddingBottom="10dp"
             android:paddingLeft="20dp"

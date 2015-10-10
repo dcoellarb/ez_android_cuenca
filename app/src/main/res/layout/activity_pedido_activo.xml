@@ -43,7 +43,7 @@
                         android:text="Contacto"
                         android:textColor="@color/light_gray"/>
                     <TextView
-                        android:id="@+id/pedido_company_name"
+                        android:id="@+id/pedido_contacto"
                         android:layout_width="match_parent"
                         android:layout_height="30dp"
                         android:textSize="10pt"
@@ -97,10 +97,10 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:layout_weight="1"
+                    android:layout_weight="2"
                     android:orientation="vertical">
                     <TextView
-                        android:id="@+id/pendiente_valor"
+                        android:id="@+id/pedido_valor"
                         android:layout_width="match_parent"
                         android:layout_height="30dp"
                         android:layout_weight="1"
@@ -109,7 +109,7 @@
                         android:text="$350.00"
                         android:gravity="bottom|right"/>
                     <TextView
-                        android:id="@+id/pendiente_comision"
+                        android:id="@+id/pedido_comision"
                         android:layout_width="match_parent"
                         android:layout_height="16dp"
                         android:layout_weight="1"

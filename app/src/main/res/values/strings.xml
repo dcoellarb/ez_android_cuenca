@@ -16,6 +16,7 @@
     <string name="status_parse_cancelado_transportista">CanceladoTransportista</string>
     <string name="status_parse_pendiente_confirmacion">PendienteConfirmacion</string>
     <string name="status_parse_pendiente">Pendiente</string>
+    <string name="status_parse_activo">Activo</string>
 
     <string name="GPSAlertDialogTitle">GPS is setting</string>
     <string name="GPSAlertDialogMessage">GPS is not enabled. Do you want to go to setting menu</string>

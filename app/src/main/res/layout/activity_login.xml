@@ -38,6 +38,7 @@
             android:id="@+id/login_user"
             android:layout_width="match_parent"
             android:layout_height="80dp"
+            android:inputType="textEmailAddress"
             android:background="@android:color/transparent"
             android:textCursorDrawable="@color/orange"
             android:hint="usuario o email"/>

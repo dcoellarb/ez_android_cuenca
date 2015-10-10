@@ -3,6 +3,7 @@ package com.easyruta.easyruta;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.parse.GetCallback;
@@ -21,6 +23,10 @@ import com.parse.SaveCallback;
 import com.pubnub.api.Callback;
 import com.pubnub.api.PubnubError;
 import com.pubnub.api.PubnubException;
+import com.squareup.picasso.Picasso;
+
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
 /**
  * Created by dcoellar on 9/26/15.
@@ -34,6 +40,7 @@ public class PedidoActivo extends Activity {
     private ImageView navImageView;
     private LinearLayout iniciar;
     private LinearLayout finalizar;
+    private String contactoNumber = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +77,27 @@ public class PedidoActivo extends Activity {
     }
 
     private void loadPedido() {
+
+        ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
+        query.whereEqualTo("objectId", id);
+        query.getFirstInBackground(new GetCallback<ParseObject>() {
+            @Override
+            public void done(ParseObject object, ParseException e) {
+                if (e == null && object != null){
+                    setPedido(object);
+                    if (object.getString("Estado").equalsIgnoreCase(getString(R.string.status_parse_encurso))){
+                        toggleEstado();
+                    }
+                }else{
+                    Log.e("ERROR","Could not get pedido");
+                    if (e != null){
+                        Log.e("ERROR",e.getMessage());
+                    }else{
+                        Log.e("ERROR","result is null for id:" + id);
+                    }
+                }
+            }
+        });
 
         ImageView phoneImageView = (ImageView) findViewById(R.id.pedido_call);
         phoneImageView.setOnClickListener(new View.OnClickListener() {
@@ -116,10 +144,7 @@ public class PedidoActivo extends Activity {
                                     if (e == null) {
                                         application.getPubnub().publish(getString(R.string.status_pedido_iniciado), id, new Callback() {});
 
-                                        iniciar.setVisibility(View.GONE);
-                                        finalizar.setVisibility(View.VISIBLE);
-                                        navImageView.setVisibility(View.VISIBLE);
-                                        gpsTracker = new GPSTracker(activity);
+                                        toggleEstado();
                                     }
                                 }
                             });
@@ -151,6 +176,11 @@ public class PedidoActivo extends Activity {
                                         });
 
                                         gpsTracker.stopUsingGPS();
+
+                                        SharedPreferences.Editor prefs = activity.getSharedPreferences("easyruta",MODE_PRIVATE).edit();
+                                        prefs.remove("pedido");
+                                        prefs.remove("estado");
+                                        prefs.commit();
 
                                         Intent i = new Intent(getBaseContext(), MainActivity.class);
                                         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -202,6 +232,78 @@ public class PedidoActivo extends Activity {
         });
     }
 
+    private void setPedido(ParseObject pedido){
+
+        ImageView empresaImage = (ImageView)findViewById(R.id.pedido_company_image);
+        TextView contacto = (TextView)findViewById(R.id.pedido_contacto);
+        try{
+            ParseObject empresa = pedido.getParseObject("empresa").fetchIfNeeded();
+            contacto.setText(empresa.getString("PersonaContacto"));
+
+            Picasso.with(this.getBaseContext())
+                    .load(empresa.getString("ImageUrl"))
+                    .placeholder(R.drawable.account)
+                    .into(empresaImage);
+
+            contactoNumber = empresa.getString("Telefono");
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        TextView viaje = (TextView)findViewById(R.id.pedido_viaje);
+        try{
+            String origen  = pedido.getParseObject("CiudadOrigen").fetchIfNeeded().getString("Nombre");
+            String destino  = pedido.getParseObject("CiudadDestino").fetchIfNeeded().getString("Nombre");
+            viaje.setText(origen + " - " + destino);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        TextView producto = (TextView)findViewById(R.id.pedido_producto);
+        producto.setText(pedido.getString("Producto"));
+
+        NumberFormat formatter = new DecimalFormat("#0.00");
+
+        TextView precio = (TextView)findViewById(R.id.pedido_valor);
+        precio.setText("$" + formatter.format(pedido.getNumber("Valor")));
+
+        TextView peso = (TextView)findViewById(R.id.pedido_peso);
+        peso.setText("Peso: " + pedido.getNumber("PesoDesde") + " a " + pedido.getNumber("PesoHasta") + " Tl.");
+        TextView carga = (TextView)findViewById(R.id.pedido_carga);
+        carga.setText("Carga: " + MainActivity.formatDate(pedido.getDate("HoraCarga")));
+        TextView entrega = (TextView)findViewById(R.id.pedido_entrega);
+        entrega.setText("Entrega: " + MainActivity.formatDate(pedido.getDate("HoraEntrega")));
+
+        TextView extra = (TextView)findViewById(R.id.pedido_extra);
+        if (pedido.getString("TipoTransporte").equalsIgnoreCase("furgon")){
+            extra.setText("Cubicaje Minimo:" + pedido.getNumber("CubicajeMin") + " m3");
+        }else if (pedido.getString("TipoTransporte").equalsIgnoreCase("plataforma")) {
+            extra.setText("Extension Minima:" + pedido.getNumber("ExtensionMin") + " pies");
+        }else{
+            extra.setVisibility(View.GONE);
+        }
+        TextView refrigeracion = (TextView)findViewById(R.id.pedido_refrigeracion);
+        if (pedido.getString("TipoTransporte").equalsIgnoreCase("furgon")) {
+            if (pedido.getBoolean("CajaRefrigerada")){
+                refrigeracion.setText("Refrigeracion: Si");
+            }else{
+                refrigeracion.setText("Refrigeracion: No");
+            }
+        }else{
+            refrigeracion.setVisibility(View.GONE);
+        }
+        TextView comision = (TextView)findViewById(R.id.pedido_comision);
+        comision.setText("$" + formatter.format(pedido.getNumber("Comision")));
+
+    }
+
+    private void toggleEstado(){
+        iniciar.setVisibility(View.GONE);
+        finalizar.setVisibility(View.VISIBLE);
+        navImageView.setVisibility(View.VISIBLE);
+        gpsTracker = new GPSTracker(activity);
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -216,7 +318,7 @@ public class PedidoActivo extends Activity {
         if (ActivityCompat.checkSelfPermission(activity,Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
             Intent callIntent = new Intent(Intent.ACTION_CALL);
             //TODO - get phone from parse
-            callIntent.setData(Uri.parse("tel:0377778888"));
+            callIntent.setData(Uri.parse("tel:" + contactoNumber));
             startActivity(callIntent);
         }
     }
