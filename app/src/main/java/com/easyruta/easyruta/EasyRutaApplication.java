@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.parse.GetCallback;
+import com.parse.LogOutCallback;
 import com.parse.Parse;
 import com.parse.ParseException;
 import com.parse.ParseObject;
@@ -24,10 +25,13 @@ public class EasyRutaApplication extends Application  {
     private ParseUser user;
     private ParseObject transportista;
     private Pubnub pubnub;
+    Application application;
 
     @Override
     public void onCreate() {
         super.onCreate();
+
+        application = this;
 
         Parse.enableLocalDatastore(this);
         Parse.initialize(this, "LRW3NBrk3JYLeAkXrpTF2TV0bDPn5HQTndrao8my", "r0lEQ4CUuYsOUQcqyRQXGjScxXn1Bbq3V6OfA3ly");
@@ -79,8 +83,21 @@ public class EasyRutaApplication extends Application  {
                     if (e != null){
                         Log.e("ERROR", "Error: " + e.getMessage());
                     }else{
-                        Log.e("ERROR", "Transportista not found.");
+                        Log.e("ERROR", "Transportista could not be retrive.");
                     }
+
+                    ParseUser.getCurrentUser().logOutInBackground(new LogOutCallback() {
+                        @Override
+                        public void done(ParseException e) {
+                            if (e != null) {
+                                Log.e("ERROR", "Error: " + e.getMessage());
+                            }
+
+                            Intent intent = new Intent(application, LoginActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
+                        }
+                    });
                 }
             }
         });
@@ -89,14 +106,47 @@ public class EasyRutaApplication extends Application  {
     public void afterSetUser() {
         SharedPreferences prefs = this.getSharedPreferences("easyruta", MODE_PRIVATE);
         if (prefs.contains("pedido")){
-            if (prefs.getString("estado","").equalsIgnoreCase(getString(R.string.status_parse_pendiente_confirmacion))){
-                Intent intent = new Intent(this, PedidoPendiente.class);
-                intent.putExtra(PedidoPendiente.PARAM_ID, prefs.getString("pedido",""));
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-            }else{
-                Intent intent = new Intent(this, PedidoActivo.class);
-                intent.putExtra(PedidoPendiente.PARAM_ID, prefs.getString("pedido",""));
+            ParseQuery query = new ParseQuery("Pedido");
+            try {
+                ParseObject pedido = query.get(prefs.getString("pedido", ""));
+                if (pedido != null &&
+                        (pedido.getString("Estado").equalsIgnoreCase(getString(R.string.status_parse_pendiente_confirmacion))
+                                || pedido.getString("Estado").equalsIgnoreCase(getString(R.string.status_parse_activo))
+                                || pedido.getString("Estado").equalsIgnoreCase(getString(R.string.status_parse_encurso))
+                        )) {
+
+                    if (prefs.getString("estado", "").equalsIgnoreCase(getString(R.string.status_parse_pendiente_confirmacion))) {
+                        Intent intent = new Intent(this, PedidoPendiente.class);
+                        intent.putExtra(PedidoPendiente.PARAM_ID, prefs.getString("pedido", ""));
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
+                    } else {
+                        Intent intent = new Intent(this, PedidoActivo.class);
+                        intent.putExtra(PedidoPendiente.PARAM_ID, prefs.getString("pedido", ""));
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
+                    }
+                } else {
+                    SharedPreferences.Editor prefsEdit = this.getSharedPreferences("easyruta", MODE_PRIVATE).edit();
+                    prefsEdit.remove("pedido");
+                    prefsEdit.remove("estado");
+                    prefsEdit.commit();
+
+                    Intent intent = new Intent(this, MainActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                }
+            }catch (ParseException e){
+                Log.e("ERROR", e.getMessage());
+
+                if (e.getCode()==101){
+                    SharedPreferences.Editor prefsEdit = this.getSharedPreferences("easyruta", MODE_PRIVATE).edit();
+                    prefsEdit.remove("pedido");
+                    prefsEdit.remove("estado");
+                    prefsEdit.commit();
+                }
+
+                Intent intent = new Intent(this, MainActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
             }

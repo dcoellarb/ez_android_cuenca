@@ -32,4 +32,5 @@
     <string name="postalCode">Codigo Postal : </string>
     <string name="addressLine">Direccion : </string>
     <string name="no_gps_message">Obteniendo senal del GPS por favor intente mas tarde.</string>
+    <string name="confirmation_cancelar_pedido">Esta seguro que desea cancelar este pedido?</string>
 </resources>

@@ -28,11 +28,13 @@ import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.SaveCallback;
 import com.pubnub.api.Callback;
+import com.pubnub.api.Pubnub;
 import com.pubnub.api.PubnubError;
 import com.pubnub.api.PubnubException;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -40,7 +42,8 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private LayoutInflater inflater;
-    ListView pedidosList;
+    private ListView pedidosList;
+    private PedidosAdapter pedidosAdapter;
     private Activity activity;
     private Number saldo;
 
@@ -49,73 +52,73 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
+
         activity = this;
 
         pubNubSuscriptions();
 
         inflater = getLayoutInflater();
 
-        saldo = ((EasyRutaApplication)getApplication()).getTransportista().getNumber("Saldo");
-        TextView saldoView = (TextView) findViewById(R.id.saldo);
-        NumberFormat formatter = new DecimalFormat("#0.00");
-        saldoView.setText("$" + formatter.format(saldo));
-
-        pedidosList  = (ListView)findViewById(R.id.pedidos_list);
-        loadPedidos();
-
-
         ParseAnalytics.trackAppOpenedInBackground(getIntent());
     }
 
     private void pubNubSuscriptions(){
+        Pubnub pubnub = ((EasyRutaApplication)getApplication()).getPubnub();
         try {
-            ((EasyRutaApplication)getApplication()).getPubnub().subscribe(getString(R.string.status_pedido_new_pedidos), new Callback() {
+            pubnub.subscribe(getString(R.string.status_pedido_new_pedidos), new Callback() {
                 public void successCallback(String channel, Object message) {
-                    loadPedidos();
+                    Log.d("TEST DANIEL", "pubnub new pedido");
+
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            loadPedidos();
+                        }
+                    });
+
                 }
 
                 public void errorCallback(String channel, PubnubError error) {
-                    Log.e("ERROR",error.getErrorString());
+                    Log.e("ERROR", error.getErrorString());
+                }
+            });
+            pubnub.subscribe(getString(R.string.status_pedido_tomado), new Callback() {
+                public void successCallback(String channel, Object message) {
+                    //loadPedidos();
+                }
+
+                public void errorCallback(String channel, PubnubError error) {
+                    Log.e("ERROR", error.getErrorString());
                 }
             });
 
-            ((EasyRutaApplication)getApplication()).getPubnub().subscribe(getString(R.string.status_pedido_tomado), new Callback() {
+            pubnub.subscribe(getString(R.string.status_pedido_rechazado), new Callback() {
                 public void successCallback(String channel, Object message) {
                     loadPedidos();
                 }
 
                 public void errorCallback(String channel, PubnubError error) {
-                    Log.e("ERROR",error.getErrorString());
+                    Log.e("ERROR", error.getErrorString());
                 }
             });
 
-            ((EasyRutaApplication)getApplication()).getPubnub().subscribe(getString(R.string.status_pedido_rechazado), new Callback() {
+            pubnub.subscribe(getString(R.string.status_pedido_cancelado_transportista), new Callback() {
                 public void successCallback(String channel, Object message) {
-                    loadPedidos();
+                    //loadPedidos();
                 }
 
                 public void errorCallback(String channel, PubnubError error) {
-                    Log.e("ERROR",error.getErrorString());
+                    Log.e("ERROR", error.getErrorString());
                 }
             });
 
-            ((EasyRutaApplication)getApplication()).getPubnub().subscribe(getString(R.string.status_pedido_cancelado_transportista), new Callback() {
+            pubnub.subscribe(getString(R.string.status_pedido_cancelado), new Callback() {
                 public void successCallback(String channel, Object message) {
-                    loadPedidos();
+                    //loadPedidos();
                 }
 
                 public void errorCallback(String channel, PubnubError error) {
-                    Log.e("ERROR",error.getErrorString());
-                }
-            });
-
-            ((EasyRutaApplication)getApplication()).getPubnub().subscribe(getString(R.string.status_pedido_cancelado), new Callback() {
-                public void successCallback(String channel, Object message) {
-                    loadPedidos();
-                }
-
-                public void errorCallback(String channel, PubnubError error) {
-                    Log.e("ERROR",error.getErrorString());
+                    Log.e("ERROR", error.getErrorString());
                 }
             });
         } catch (PubnubException e) {
@@ -124,21 +127,56 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onResume(){
+        super.onResume();
+
+        updateSaldo();
+    }
+
+    private void updateSaldo(){
+        ParseQuery query = new ParseQuery("Transportista");
+        query.whereEqualTo("objectId",((EasyRutaApplication)getApplication()).getTransportista().getObjectId());
+        query.getFirstInBackground(new GetCallback<ParseObject>() {
+            @Override
+            public void done(ParseObject object, ParseException e) {
+                if (e == null && object != null) {
+                    saldo = object.getNumber("Saldo");
+                    TextView saldoView = (TextView) findViewById(R.id.saldo);
+                    NumberFormat formatter = new DecimalFormat("#0.00");
+                    saldoView.setText("$" + formatter.format(saldo));
+
+                    pedidosList = (ListView) findViewById(R.id.pedidos_list);
+                    pedidosAdapter = new PedidosAdapter();
+                    pedidosList.setAdapter(pedidosAdapter);
+                    loadPedidos();
+                } else {
+                    Log.e("ERROR", "Could not get transportista");
+                    if (e != null) {
+                        Log.e("ERROR", e.getMessage());
+                    } else {
+                        Log.e("ERROR", "result is null for id:" + ((EasyRutaApplication)getApplication()).getTransportista().getObjectId());
+                    }
+                }
+            }
+        });
+    }
+
     private void loadPedidos(){
         ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
         query.whereEqualTo("Estado", getString(R.string.status_parse_pendiente));
         query.whereLessThanOrEqualTo("Comision", saldo);
+        query.whereNotEqualTo("TransportistasBloqueados", ((EasyRutaApplication) getApplication()).getTransportista().getObjectId());
         query.orderByDescending("createdAt");
         query.findInBackground(new FindCallback<ParseObject>() {
             public void done(List<ParseObject> pedidos, ParseException e) {
                 if (e == null) {
-                    pedidosList.setAdapter(new PedidosAdapter(pedidos));
+                    pedidosAdapter.updatePedidos(pedidos);
                 } else {
                     Log.d("ERROR", "Error: " + e.getMessage());
                 }
             }
         });
-
     }
 
     @Override
@@ -157,6 +195,9 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_profile) {
+            Pubnub pubnub = ((EasyRutaApplication)getApplication()).getPubnub();
+            pubnub.unsubscribeAll();
+
             Intent intent = new Intent(this, ProfileActivity.class);
             startActivity(intent);
             return true;
@@ -167,11 +208,7 @@ public class MainActivity extends AppCompatActivity {
 
     class PedidosAdapter extends BaseAdapter {
 
-        private List<ParseObject> pedidos;
-
-        public PedidosAdapter(List<ParseObject> pedidos){
-            this.pedidos = pedidos;
-        }
+        private List<ParseObject> pedidos = new ArrayList<>();
 
         @Override
         public int getCount() {
@@ -190,7 +227,6 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public View getView(int i, View convertView, ViewGroup parent) {
-
             convertView = inflater.inflate(R.layout.pendidos_item,parent,false);
 
             TextView viaje = (TextView)convertView.findViewById(R.id.pedido_viaje);
@@ -201,22 +237,17 @@ public class MainActivity extends AppCompatActivity {
             } catch (ParseException e) {
                 e.printStackTrace();
             }
-
             TextView producto = (TextView)convertView.findViewById(R.id.pedido_producto);
             producto.setText(pedidos.get(i).getString("Producto"));
-
             NumberFormat formatter = new DecimalFormat("#0.00");
-
             TextView precio = (TextView)convertView.findViewById(R.id.pedido_valor);
             precio.setText("$" + formatter.format(pedidos.get(i).getNumber("Valor")));
-
             TextView peso = (TextView)convertView.findViewById(R.id.pedido_peso);
             peso.setText("Peso: " + pedidos.get(i).getNumber("PesoDesde") + " a " + pedidos.get(i).getNumber("PesoHasta") + " Tl.");
             TextView carga = (TextView)convertView.findViewById(R.id.pedido_carga);
             carga.setText("Carga: " + formatDate(pedidos.get(i).getDate("HoraCarga")));
             TextView entrega = (TextView)convertView.findViewById(R.id.pedido_entrega);
             entrega.setText("Entrega: " + formatDate(pedidos.get(i).getDate("HoraEntrega")));
-
             TextView extra = (TextView)convertView.findViewById(R.id.pedido_extra);
             if (pedidos.get(i).getString("TipoTransporte").equalsIgnoreCase("furgon")){
                 extra.setText("Cubicaje Minimo:" + pedidos.get(i).getNumber("CubicajeMin") + " m3");
@@ -267,7 +298,6 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
                     final ParseObject transportista = ((EasyRutaApplication)getApplication()).getTransportista();
-
                     ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
                     query.getInBackground(((ParseObject) view.getTag()).getObjectId().toString(), new GetCallback<ParseObject>() {
                         public void done(final ParseObject pedido, ParseException e) {
@@ -285,12 +315,14 @@ public class MainActivity extends AppCompatActivity {
                                             });
 
                                             SharedPreferences.Editor prefs = activity.getSharedPreferences("easyruta", MODE_PRIVATE).edit();
-                                            prefs.putString("pedido",pedido.getObjectId());
-                                            prefs.putString("estado",getString(R.string.status_parse_pendiente_confirmacion));
+                                            prefs.putString("pedido", pedido.getObjectId());
+                                            prefs.putString("estado", getString(R.string.status_parse_pendiente_confirmacion));
                                             prefs.commit();
 
+                                            Pubnub pubnub = ((EasyRutaApplication)getApplication()).getPubnub();
+                                            pubnub.unsubscribeAll();
+
                                             Intent intent = new Intent(activity, PedidoPendiente.class);
-                                            intent.putExtra(PedidoPendiente.PARAM_ID, pedido.getObjectId());
                                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                             startActivity(intent);
 
@@ -309,6 +341,12 @@ public class MainActivity extends AppCompatActivity {
             });
 
             return convertView;
+        }
+
+        public void updatePedidos(List<ParseObject> pedidos) {
+            this.pedidos.clear();
+            this.pedidos.addAll(pedidos);
+            this.notifyDataSetChanged();
         }
     }
 
