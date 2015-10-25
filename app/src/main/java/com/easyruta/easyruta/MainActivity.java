@@ -237,8 +237,13 @@ public class MainActivity extends AppCompatActivity {
             } catch (ParseException e) {
                 e.printStackTrace();
             }
-            TextView producto = (TextView)convertView.findViewById(R.id.pedido_producto);
-            producto.setText(pedidos.get(i).getString("Producto"));
+            TextView cantidad = (TextView)convertView.findViewById(R.id.pedido_cantidad);
+            if (pedidos.get(i).getString("TipoUnidad").equalsIgnoreCase("peso")){
+                cantidad.setText("Peso desde:" + String.valueOf(pedidos.get(i).getNumber("PesoDesde")) + " hasta " + String.valueOf(pedidos.get(i).getNumber("PesoHasta")) + " Tn");
+            }else{
+                cantidad.setText(pedidos.get(i).getNumber("Unidades") + " " + pedidos.get(i).getString("Producto"));
+            }
+
             NumberFormat formatter = new DecimalFormat("#0.00");
             TextView precio = (TextView)convertView.findViewById(R.id.pedido_valor);
             precio.setText("$" + formatter.format(pedidos.get(i).getNumber("Valor")));
@@ -305,6 +310,7 @@ public class MainActivity extends AppCompatActivity {
                                 //TODO - check if status is still pending
                                 final EasyRutaApplication application = (EasyRutaApplication)getApplication();
 
+                                pedido.put("HoraSeleccion", Calendar.getInstance().getTime());
                                 pedido.put("Estado", getString(R.string.status_parse_pendiente_confirmacion));
                                 pedido.put("Transportista", transportista);
                                 pedido.saveInBackground(new SaveCallback() {

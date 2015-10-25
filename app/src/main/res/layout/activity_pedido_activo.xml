@@ -16,7 +16,7 @@
         android:orientation="vertical">
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="320dp"
+            android:layout_height="330dp"
             android:orientation="vertical"
             android:layout_margin="10dp">
             <LinearLayout
@@ -71,11 +71,11 @@
             </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="70dp"
                 android:orientation="horizontal">
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="60dp"
+                    android:layout_height="70dp"
                     android:layout_weight="1"
                     android:gravity="center_horizontal"
                     android:orientation="vertical">
@@ -87,9 +87,17 @@
                         android:textColor="@color/black"
                         android:text="Cuenca - Guayaquil"/>
                     <TextView
+                        android:id="@+id/pedido_direccion"
+                        android:layout_width="match_parent"
+                        android:layout_height="20dp"
+                        android:textColor="@color/grey"
+                        android:textSize="7pt"
+                        android:maxLines="1"
+                        android:text="Aut. Medio Ejido"/>
+                    <TextView
                         android:id="@+id/pedido_producto"
                         android:layout_width="match_parent"
-                        android:layout_height="30dp"
+                        android:layout_height="20dp"
                         android:textColor="@color/grey"
                         android:textSize="7pt"
                         android:text="Ceramica"/>
@@ -130,8 +138,8 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
                 android:orientation="horizontal"
+                android:layout_weight="1"
                 android:layout_marginTop="10dp">
                 <LinearLayout
                     android:layout_width="match_parent"

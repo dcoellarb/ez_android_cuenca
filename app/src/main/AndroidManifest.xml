@@ -54,6 +54,9 @@
             android:configChanges="orientation"
             android:screenOrientation="portrait">
         </activity>
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="41ad49d43471dd3e631b695825140071ff1aeb6c" />
     </application>
 
 </manifest>

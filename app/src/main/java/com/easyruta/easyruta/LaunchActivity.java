@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
+import com.crashlytics.android.Crashlytics;
 import com.parse.ParseUser;
 
 /**
@@ -25,6 +26,10 @@ public class LaunchActivity extends Activity {
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
         }else{
+            Crashlytics.setUserIdentifier(ParseUser.getCurrentUser().getObjectId());
+            Crashlytics.setUserEmail(ParseUser.getCurrentUser().getEmail());
+            Crashlytics.setUserName(ParseUser.getCurrentUser().getUsername());
+
             if (((EasyRutaApplication) getApplication()).getUser() == null){
                 ((EasyRutaApplication) getApplication()).setUser(ParseUser.getCurrentUser());
             }else{

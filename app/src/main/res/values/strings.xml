@@ -1,6 +1,4 @@
 <resources>
-    <string name="app_name">easyruta</string>
-
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Preferencias</string>
     <string name="status_pedido_rechazado">pedido_rechazado</string>

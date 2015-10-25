@@ -258,6 +258,9 @@ public class PedidoActivo extends Activity {
             e.printStackTrace();
         }
 
+        TextView direccion = (TextView)findViewById(R.id.pedido_direccion);
+        direccion.setText(pedido.getString("DireccionDestino"));
+
         TextView producto = (TextView)findViewById(R.id.pedido_producto);
         producto.setText(pedido.getString("Producto"));
 
@@ -300,6 +303,7 @@ public class PedidoActivo extends Activity {
         iniciar.setVisibility(View.GONE);
         finalizar.setVisibility(View.VISIBLE);
         navImageView.setVisibility(View.VISIBLE);
+
         gpsTracker = new GPSTracker(activity);
     }
 

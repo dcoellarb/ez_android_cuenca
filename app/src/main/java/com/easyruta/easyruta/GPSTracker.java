@@ -5,6 +5,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -14,6 +15,11 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
+
+import com.parse.GetCallback;
+import com.parse.ParseException;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
 
 import java.io.IOException;
 import java.util.List;
@@ -28,6 +34,7 @@ import java.util.Locale;
  */
 
 public class GPSTracker extends Service implements LocationListener {
+
 
     // Get Class Name
     private static String TAG = GPSTracker.class.getName();
@@ -54,7 +61,7 @@ public class GPSTracker extends Service implements LocationListener {
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 100; // 100 meters
 
     // The minimum time between updates in milliseconds
-    private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 5 minute
+    private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 1 minute
 
     // Declaring a Location Manager
     protected LocationManager locationManager;
@@ -323,8 +330,30 @@ public class GPSTracker extends Service implements LocationListener {
     }
 
     @Override
-    public void onLocationChanged(Location location) {
+    public void onLocationChanged(final Location location) {
         Log.d("TEST DANIEL","new location:" + location.getLatitude() + " - " + location.getLongitude());
+
+        SharedPreferences prefs = mContext.getSharedPreferences("easyruta", MODE_PRIVATE);
+        final String id = prefs.getString("pedido", "");
+
+        ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
+        query.whereEqualTo("objectId", id);
+        query.getFirstInBackground(new GetCallback<ParseObject>() {
+            @Override
+            public void done(ParseObject object, ParseException e) {
+                if (e == null && object != null) {
+                    object.add("Locations",String.valueOf(location.getLatitude()) + ":" + String.valueOf(location.getLongitude()));
+                    object.saveInBackground();
+                } else {
+                    Log.e("ERROR", "Could not get pedido");
+                    if (e != null) {
+                        Log.e("ERROR", e.getMessage());
+                    } else {
+                        Log.e("ERROR", "result is null for id:" + id);
+                    }
+                }
+            }
+        });
         //TODO update parse;
     }
 

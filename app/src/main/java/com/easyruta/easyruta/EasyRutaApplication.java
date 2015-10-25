@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.crashlytics.android.Crashlytics;
 import com.parse.GetCallback;
 import com.parse.LogOutCallback;
 import com.parse.Parse;
@@ -16,6 +17,8 @@ import com.pubnub.api.Pubnub;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import io.fabric.sdk.android.Fabric;
 
 /**
  * Created by dcoellar on 9/21/15.
@@ -30,13 +33,14 @@ public class EasyRutaApplication extends Application  {
     @Override
     public void onCreate() {
         super.onCreate();
+        Fabric.with(this, new Crashlytics());
 
         application = this;
 
         Parse.enableLocalDatastore(this);
-        Parse.initialize(this, "LRW3NBrk3JYLeAkXrpTF2TV0bDPn5HQTndrao8my", "r0lEQ4CUuYsOUQcqyRQXGjScxXn1Bbq3V6OfA3ly");
+        Parse.initialize(this, Constants.PARSE_APPLICATION_ID, Constants.PARSE_CLIENT_KEY);
 
-        pubnub = new Pubnub("pub-c-ecec5777-242f-4a3e-8689-9b272441bb11", "sub-c-5327f6bc-60c6-11e5-b0b1-0619f8945a4f");
+        pubnub = new Pubnub(Constants.PUBNUB_PUB_KEY, Constants.PUBNUB_SUB_KEY);
     }
 
     public ParseUser getUser() {

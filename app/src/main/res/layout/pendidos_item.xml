@@ -125,7 +125,7 @@
                     android:text="Cuenca - Guayaquil"
                     android:gravity="center|left"/>
                 <TextView
-                    android:id="@+id/pedido_producto"
+                    android:id="@+id/pedido_cantidad"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="4"

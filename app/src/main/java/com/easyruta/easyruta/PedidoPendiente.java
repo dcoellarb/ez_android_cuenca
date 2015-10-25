@@ -25,6 +25,7 @@ import com.pubnub.api.PubnubException;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.Calendar;
 
 /**
  * Created by dcoellar on 9/26/15.
@@ -127,43 +128,18 @@ public class PedidoPendiente extends Activity {
         query.getFirstInBackground(new GetCallback<ParseObject>() {
             @Override
             public void done(ParseObject object, ParseException e) {
-                if (e == null && object != null){
+                if (e == null && object != null) {
                     setPedido(object);
-                }else{
-                    Log.e("ERROR","Could not get pedido");
-                    if (e != null){
-                        Log.e("ERROR",e.getMessage());
-                    }else{
-                        Log.e("ERROR","result is null for id:" + id);
+                } else {
+                    Log.e("ERROR", "Could not get pedido");
+                    if (e != null) {
+                        Log.e("ERROR", e.getMessage());
+                    } else {
+                        Log.e("ERROR", "result is null for id:" + id);
                     }
                 }
             }
         });
-
-        progressBar = (ProgressBar) findViewById(R.id.pending_progress);
-        counter = (TextView) findViewById(R.id.pending_counter);
-        new CountDownTimer(1800000, 1000) {
-
-            public void onTick(long millisUntilFinished) {
-                int progress = 1800000 - (int)millisUntilFinished;
-                progressBar.setSecondaryProgress(progress);
-
-                int seconds = (int) (millisUntilFinished / 1000) % 60 ;
-                String secodsString = String.valueOf(seconds);
-                if (seconds < 10)
-                    secodsString = "0" + String.valueOf(seconds);
-                int minutes = (int) ((millisUntilFinished / (1000*60)) % 60);
-                String minutesString = String.valueOf(minutes);
-                if (minutes < 10)
-                    minutesString = "0" + String.valueOf(minutes);
-                counter.setText(minutesString + ":" + secodsString);
-
-            }
-
-            public void onFinish() {
-                cancelPedido(false);
-            }
-        }.start();
     }
 
     private void setPedido(ParseObject pedido){
@@ -236,6 +212,38 @@ public class PedidoPendiente extends Activity {
                         .setNegativeButton("No", dialogClickListener).show();
             }
         });
+
+        Calendar calEnd = Calendar.getInstance();
+        calEnd.setTime(pedido.getDate("HoraSeleccion"));
+        calEnd.add(Calendar.MINUTE, 30);
+        Calendar calCurrent = Calendar.getInstance();
+        long progress = calEnd.getTimeInMillis() - calCurrent.getTimeInMillis();
+
+        progressBar = (ProgressBar) findViewById(R.id.pending_progress);
+        counter = (TextView) findViewById(R.id.pending_counter);
+        new CountDownTimer(progress, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+                int progress = 1800000 - (int)millisUntilFinished;
+                progressBar.setSecondaryProgress(progress);
+
+                int seconds = (int) (millisUntilFinished / 1000) % 60 ;
+                String secodsString = String.valueOf(seconds);
+                if (seconds < 10)
+                    secodsString = "0" + String.valueOf(seconds);
+                int minutes = (int) ((millisUntilFinished / (1000*60)) % 60);
+                String minutesString = String.valueOf(minutes);
+                if (minutes < 10)
+                    minutesString = "0" + String.valueOf(minutes);
+                counter.setText(minutesString + ":" + secodsString);
+
+            }
+
+            public void onFinish() {
+                cancelPedido(false);
+            }
+        }.start();
+
 
     }
 
