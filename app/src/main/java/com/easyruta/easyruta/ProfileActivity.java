@@ -19,11 +19,9 @@ import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
-import com.parse.ParseQuery;
 import com.parse.SaveCallback;
 import com.squareup.picasso.Picasso;
 
@@ -63,9 +61,6 @@ public class ProfileActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_profile);
         activity = this;
-
-        //ParseObject transportista = new ParseObject("Transportista");
-        //transportista.put("photo",);
 
         photo = (ImageView)findViewById(R.id.profile_photo);
         photo.setOnClickListener(new View.OnClickListener() {
@@ -222,7 +217,9 @@ public class ProfileActivity extends AppCompatActivity {
         placa.setText(transportista.getString("Placa"));
         marca.setText(transportista.getString("Marca"));
         modelo.setText(transportista.getString("Modelo"));
-        anio.setText(String.valueOf(transportista.getNumber("Anio")));
+        if (transportista.getNumber("Anio") != null) {
+            anio.setText(String.valueOf(transportista.getNumber("Anio")));
+        }
         color.setText(transportista.getString("Color"));
         NumberFormat formatter = new DecimalFormat("#0.00");
         if (transportista.getNumber("CubicajeMinimo") != null){
@@ -248,11 +245,14 @@ public class ProfileActivity extends AppCompatActivity {
                 setTipo(findViewById(R.id.profile_tipo_ninera));
             }
         }else{
+            tipo = "furgon";
             setTipo(findViewById(R.id.profile_tipo_furgon));
         }
 
         ParseFile file = transportista.getParseFile("photo");
-        Picasso.with(this).load(file.getUrl()).into(photo);
+        if (file != null){
+            Picasso.with(this).load(file.getUrl()).into(photo);
+        }
     }
 
     @Override
@@ -271,13 +271,16 @@ public class ProfileActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_profile_save) {
-
             if (imageBitmap != null){
                 saveFile();
             }else{
                 saveProfile(null);
             }
+            return true;
+        }
 
+        if (id == android.R.id.home){
+            this.finish();
             return true;
         }
 
