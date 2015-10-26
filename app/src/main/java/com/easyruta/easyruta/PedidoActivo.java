@@ -319,7 +319,7 @@ public class PedidoActivo extends Activity {
                 if (e == null && object != null) {
                     object.put("Estado", getString(R.string.status_parse_pendiente));
                     object.remove("Transportista");
-                    object.add("TransportistasBloqueados", ((EasyRutaApplication)getApplication()).getTransportista().getObjectId());
+                    object.add("TransportistasCancelados", ((EasyRutaApplication)getApplication()).getTransportista().getObjectId());
                     object.saveInBackground(new SaveCallback() {
                         @Override
                         public void done(ParseException e) {

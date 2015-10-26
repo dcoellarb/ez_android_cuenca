@@ -167,6 +167,7 @@ public class MainActivity extends AppCompatActivity {
         query.whereEqualTo("Estado", getString(R.string.status_parse_pendiente));
         query.whereLessThanOrEqualTo("Comision", saldo);
         query.whereNotEqualTo("TransportistasBloqueados", ((EasyRutaApplication) getApplication()).getTransportista().getObjectId());
+        query.whereNotEqualTo("TransportistasCancelados", ((EasyRutaApplication) getApplication()).getTransportista().getObjectId());
         query.orderByDescending("createdAt");
         query.findInBackground(new FindCallback<ParseObject>() {
             public void done(List<ParseObject> pedidos, ParseException e) {
