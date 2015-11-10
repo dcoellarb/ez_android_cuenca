@@ -32,6 +32,9 @@ import com.pubnub.api.Pubnub;
 import com.pubnub.api.PubnubError;
 import com.pubnub.api.PubnubException;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -64,18 +67,32 @@ public class MainActivity extends AppCompatActivity {
 
     private void pubNubSuscriptions(){
         Pubnub pubnub = ((EasyRutaApplication)getApplication()).getPubnub();
+
+        JSONObject jso = new JSONObject();
+        try {
+            jso.put("type","transportista");
+            jso.put("email",((EasyRutaApplication)getApplication()).getUser().getEmail());
+            jso.put("name", ((EasyRutaApplication)getApplication()).getTransportista().get("Nombre"));
+            pubnub.setState(getString(R.string.status_pedido_new_pedidos), ((EasyRutaApplication)getApplication()).getUser().getObjectId(), jso, new Callback() {
+                public void successCallback(String channel, Object response) {
+                }
+
+                public void errorCallback(String channel, PubnubError error) {
+                }
+            });
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
         try {
             pubnub.subscribe(getString(R.string.status_pedido_new_pedidos), new Callback() {
                 public void successCallback(String channel, Object message) {
-                    Log.d("TEST DANIEL", "pubnub new pedido");
-
                     activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             loadPedidos();
                         }
                     });
-
                 }
 
                 public void errorCallback(String channel, PubnubError error) {
@@ -121,6 +138,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.e("ERROR", error.getErrorString());
                 }
             });
+
         } catch (PubnubException e) {
             e.printStackTrace();
         }
@@ -130,6 +148,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume(){
         super.onResume();
+
+        pubNubSuscriptions();
 
         updateSaldo();
     }

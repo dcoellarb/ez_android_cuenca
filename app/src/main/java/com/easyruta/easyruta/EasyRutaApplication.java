@@ -39,8 +39,6 @@ public class EasyRutaApplication extends Application  {
 
         Parse.enableLocalDatastore(this);
         Parse.initialize(this, Constants.PARSE_APPLICATION_ID, Constants.PARSE_CLIENT_KEY);
-
-        pubnub = new Pubnub(Constants.PUBNUB_PUB_KEY, Constants.PUBNUB_SUB_KEY);
     }
 
     public ParseUser getUser() {
@@ -108,6 +106,11 @@ public class EasyRutaApplication extends Application  {
     }
 
     public void afterSetUser() {
+
+        pubnub = new Pubnub(Constants.PUBNUB_PUB_KEY, Constants.PUBNUB_SUB_KEY);
+        String uuid = this.user.getObjectId();
+        pubnub.setUUID(uuid);
+
         SharedPreferences prefs = this.getSharedPreferences("easyruta", MODE_PRIVATE);
         if (prefs.contains("pedido")){
             ParseQuery query = new ParseQuery("Pedido");
