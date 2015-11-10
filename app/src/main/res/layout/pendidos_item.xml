@@ -28,13 +28,6 @@
                 android:orientation="vertical"
                 android:layout_weight="1">
                 <TextView
-                    android:id="@+id/pedido_peso"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textSize="7pt"
-                    android:textColor="@color/black"
-                    android:text="Peso: 3 a 5 Tl."/>
-                <TextView
                     android:id="@+id/pedido_carga"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

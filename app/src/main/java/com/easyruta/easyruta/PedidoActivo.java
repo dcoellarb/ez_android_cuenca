@@ -258,8 +258,10 @@ public class PedidoActivo extends Activity {
             e.printStackTrace();
         }
 
-        TextView direccion = (TextView)findViewById(R.id.pedido_direccion);
-        direccion.setText(pedido.getString("DireccionDestino"));
+        TextView direccion_origen = (TextView)findViewById(R.id.pedido_direccion_origen);
+        direccion_origen.setText(pedido.getString("DireccionOrigen"));
+        TextView direccion_destino = (TextView)findViewById(R.id.pedido_direccion_destino);
+        direccion_destino.setText(pedido.getString("DireccionDestino"));
 
         TextView producto = (TextView)findViewById(R.id.pedido_producto);
         producto.setText(pedido.getString("Producto"));
@@ -270,7 +272,11 @@ public class PedidoActivo extends Activity {
         precio.setText("$" + formatter.format(pedido.getNumber("Valor")));
 
         TextView peso = (TextView)findViewById(R.id.pedido_peso);
-        peso.setText("Peso: " + pedido.getNumber("PesoDesde") + " a " + pedido.getNumber("PesoHasta") + " Tl.");
+        if (pedido.getString("TipoUnidad").equalsIgnoreCase("peso")){
+            peso.setText("Peso desde:" + String.valueOf(pedido.getNumber("PesoDesde")) + " hasta " + String.valueOf(pedido.getNumber("PesoHasta")) + " Tn");
+        }else{
+            peso.setText(pedido.getNumber("Unidades") + " unidades");
+        }
         TextView carga = (TextView)findViewById(R.id.pedido_carga);
         carga.setText("Carga: " + MainActivity.formatDate(pedido.getDate("HoraCarga")));
         TextView entrega = (TextView)findViewById(R.id.pedido_entrega);

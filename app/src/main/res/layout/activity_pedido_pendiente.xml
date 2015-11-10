@@ -62,14 +62,6 @@
                     android:textColor="@color/black"
                     android:text="Cuenca - Guayaquil"
                     android:gravity="center_horizontal"/>
-                <TextView
-                    android:id="@+id/pedido_producto"
-                    android:layout_width="match_parent"
-                    android:layout_height="20dp"
-                    android:gravity="center_horizontal"
-                    android:textColor="@color/grey"
-                    android:textSize="7pt"
-                    android:text="Ceramica"/>
             </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
@@ -158,19 +150,19 @@
             android:layout_height="1dp"
             android:layout_width="match_parent"
             android:background="@color/grey"/>
-        <LinearLayout
-            android:id="@+id/pedido_pendiente_cancelar"
-            android:layout_marginTop="10dp"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:background="@color/grey"
-            android:gravity="center|center">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textSize="10pt"
-                android:text="CANCELAR"/>
-        </LinearLayout>
+            <LinearLayout
+                android:id="@+id/pedido_pendiente_cancelar"
+                android:layout_marginTop="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="@color/grey"
+                android:gravity="center|center">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textSize="10pt"
+                    android:text="CANCELAR"/>
+            </LinearLayout>
         </LinearLayout>
 </LinearLayout>

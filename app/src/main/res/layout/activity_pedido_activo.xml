@@ -21,10 +21,10 @@
             android:layout_margin="10dp">
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="150dp"
+                android:layout_height="100dp"
                 android:orientation="horizontal">
                 <LinearLayout
-                    android:layout_width="150dp"
+                    android:layout_width="100dp"
                     android:layout_height="match_parent">
                     <ImageView
                         android:id="@+id/pedido_company_image"
@@ -71,11 +71,11 @@
             </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="70dp"
+                android:layout_height="100dp"
                 android:orientation="horizontal">
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="70dp"
+                    android:layout_height="100dp"
                     android:layout_weight="1"
                     android:gravity="center_horizontal"
                     android:orientation="vertical">
@@ -87,7 +87,13 @@
                         android:textColor="@color/black"
                         android:text="Cuenca - Guayaquil"/>
                     <TextView
-                        android:id="@+id/pedido_direccion"
+                        android:layout_width="match_parent"
+                        android:layout_height="7pt"
+                        android:textSize="5pt"
+                        android:textColor="@color/light_gray"
+                        android:text="Direccion Carga:"/>
+                    <TextView
+                        android:id="@+id/pedido_direccion_origen"
                         android:layout_width="match_parent"
                         android:layout_height="20dp"
                         android:textColor="@color/grey"
@@ -95,12 +101,19 @@
                         android:maxLines="1"
                         android:text="Aut. Medio Ejido"/>
                     <TextView
-                        android:id="@+id/pedido_producto"
+                        android:layout_width="match_parent"
+                        android:layout_height="7pt"
+                        android:textSize="5pt"
+                        android:textColor="@color/light_gray"
+                        android:text="Direccion Entrega:"/>
+                    <TextView
+                        android:id="@+id/pedido_direccion_destino"
                         android:layout_width="match_parent"
                         android:layout_height="20dp"
                         android:textColor="@color/grey"
                         android:textSize="7pt"
-                        android:text="Ceramica"/>
+                        android:maxLines="1"
+                        android:text="Aut. Medio Ejido"/>
                 </LinearLayout>
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -144,43 +157,112 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:orientation="vertical"
+                    android:orientation="horizontal"
                     android:layout_weight="1">
-                    <TextView
-                        android:id="@+id/pedido_peso"
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textSize="7pt"
-                        android:textColor="@color/grey"
-                        android:text="Peso: 3 a 5 Tl."/>
-                    <TextView
-                        android:id="@+id/pedido_carga"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:layout_weight="3">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:textSize="5pt"
+                            android:textColor="@color/light_gray"
+                            android:text="Producto:"/>
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:textSize="5pt"
+                            android:textColor="@color/light_gray"
+                            android:text="Peso:"/>
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:textSize="5pt"
+                            android:textColor="@color/light_gray"
+                            android:text="Carga:"/>
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:textSize="5pt"
+                            android:textColor="@color/light_gray"
+                            android:text="Entrega:"/>
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:textSize="5pt"
+                            android:textColor="@color/light_gray"
+                            android:text="Cubicaje:"/>
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:textSize="5pt"
+                            android:textColor="@color/light_gray"
+                            android:text="Refrigerado:"/>
+                        </LinearLayout>
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textSize="7pt"
-                        android:textColor="@color/grey"
-                        android:text="Carga: Hoy a las 5:00pm"/>
-                    <TextView
-                        android:id="@+id/pedido_entrega"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textSize="7pt"
-                        android:textColor="@color/grey"
-                        android:text="Entrega: Maniana a las 6:00am"/>
-                    <TextView
-                        android:id="@+id/pedido_extra"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textSize="7pt"
-                        android:textColor="@color/grey"
-                        android:text="Cubicaje: 20 m3"/>
-                    <TextView
-                        android:id="@+id/pedido_refrigeracion"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textSize="7pt"
-                        android:textColor="@color/grey"
-                        android:text="Refrigerado: Si"/>
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:layout_weight="1">
+
+                        <TextView
+                            android:id="@+id/pedido_producto"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:textColor="@color/grey"
+                            android:textSize="7pt"
+                            android:text="Ceramica"/>
+                        <TextView
+                            android:id="@+id/pedido_peso"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:textSize="7pt"
+                            android:textColor="@color/grey"
+                            android:text="3 a 5 Tl."/>
+                        <TextView
+                            android:id="@+id/pedido_carga"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:textSize="7pt"
+                            android:textColor="@color/grey"
+                            android:text="Hoy a las 5:00pm"/>
+                        <TextView
+                            android:id="@+id/pedido_entrega"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:textSize="7pt"
+                            android:textColor="@color/grey"
+                            android:text="Entrega: Maniana a las 6:00am"/>
+                        <TextView
+                            android:id="@+id/pedido_extra"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:textSize="7pt"
+                            android:textColor="@color/grey"
+                            android:text="20 m3"/>
+                        <TextView
+                            android:id="@+id/pedido_refrigeracion"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:textSize="7pt"
+                            android:textColor="@color/grey"
+                            android:text="Si"/>
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>

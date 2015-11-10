@@ -242,14 +242,12 @@ public class MainActivity extends AppCompatActivity {
             if (pedidos.get(i).getString("TipoUnidad").equalsIgnoreCase("peso")){
                 cantidad.setText("Peso desde:" + String.valueOf(pedidos.get(i).getNumber("PesoDesde")) + " hasta " + String.valueOf(pedidos.get(i).getNumber("PesoHasta")) + " Tn");
             }else{
-                cantidad.setText(pedidos.get(i).getNumber("Unidades") + " " + pedidos.get(i).getString("Producto"));
+                cantidad.setText(pedidos.get(i).getNumber("Unidades") + " unidades");
             }
 
             NumberFormat formatter = new DecimalFormat("#0.00");
             TextView precio = (TextView)convertView.findViewById(R.id.pedido_valor);
             precio.setText("$" + formatter.format(pedidos.get(i).getNumber("Valor")));
-            TextView peso = (TextView)convertView.findViewById(R.id.pedido_peso);
-            peso.setText("Peso: " + pedidos.get(i).getNumber("PesoDesde") + " a " + pedidos.get(i).getNumber("PesoHasta") + " Tl.");
             TextView carga = (TextView)convertView.findViewById(R.id.pedido_carga);
             carga.setText("Carga: " + formatDate(pedidos.get(i).getDate("HoraCarga")));
             TextView entrega = (TextView)convertView.findViewById(R.id.pedido_entrega);
