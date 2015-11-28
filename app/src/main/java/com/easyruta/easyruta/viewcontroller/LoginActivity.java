@@ -1,4 +1,4 @@
-package com.easyruta.easyruta;
+package com.easyruta.easyruta.viewcontroller;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -7,6 +7,8 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
+import com.easyruta.easyruta.EasyRutaApplication;
+import com.easyruta.easyruta.R;
 import com.parse.LogInCallback;
 import com.parse.ParseException;
 import com.parse.ParseUser;
@@ -32,7 +34,7 @@ public class LoginActivity extends Activity{
                 ParseUser.logInInBackground(login.getText().toString(), password.getText().toString(), new LogInCallback() {
                     public void done(ParseUser user, ParseException e) {
                         if (user != null) {
-                            ((EasyRutaApplication) getApplication()).setUser(user);
+                            ((EasyRutaApplication) getApplication()).getRedirectService().redirectByUser(((EasyRutaApplication) getApplication()),activity);
                         } else {
                             Log.e("ERROR", "Error singing up:" + e.getMessage());
                         }

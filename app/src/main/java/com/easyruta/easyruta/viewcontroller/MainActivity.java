@@ -1,4 +1,4 @@
-package com.easyruta.easyruta;
+package com.easyruta.easyruta.viewcontroller;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -20,6 +20,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.easyruta.easyruta.EasyRutaApplication;
+import com.easyruta.easyruta.R;
 import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.ParseAnalytics;
@@ -175,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
                     if (e != null) {
                         Log.e("ERROR", e.getMessage());
                     } else {
-                        Log.e("ERROR", "result is null for id:" + ((EasyRutaApplication)getApplication()).getTransportista().getObjectId());
+                        Log.e("ERROR", "result is null for id:" + ((EasyRutaApplication) getApplication()).getTransportista().getObjectId());
                     }
                 }
             }
@@ -183,11 +185,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadPedidos(){
+        ParseObject transportista = ((EasyRutaApplication) getApplication()).getTransportista();
+
         ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
         query.whereEqualTo("Estado", getString(R.string.status_parse_pendiente));
         query.whereLessThanOrEqualTo("Comision", saldo);
-        query.whereNotEqualTo("TransportistasBloqueados", ((EasyRutaApplication) getApplication()).getTransportista().getObjectId());
-        query.whereNotEqualTo("TransportistasCancelados", ((EasyRutaApplication) getApplication()).getTransportista().getObjectId());
+        query.whereNotEqualTo("TransportistasBloqueados", transportista.getObjectId());
+        query.whereNotEqualTo("TransportistasCancelados", transportista.getObjectId());
+        query.whereEqualTo("TipoTransporte", transportista.getString("TipoTransporte"));
+        if (transportista.getString("TipoTransporte").equalsIgnoreCase("plataforma") || transportista.getString("TipoTransporte").equalsIgnoreCase("furgon")){
+            if (transportista.get("TipoTransporte").toString().equalsIgnoreCase("plataforma")){
+                query.whereLessThanOrEqualTo("ExtensionMin", transportista.get("ExtensionMinima"));
+            }else{
+                query.whereLessThanOrEqualTo("CubicajeMin", transportista.get("CubicajeMinimo"));
+                if (!transportista.getBoolean("Refrigerado")){
+                    query.whereEqualTo("Refrigerado", false);
+                }
+            }
+        }
         query.orderByDescending("createdAt");
         query.findInBackground(new FindCallback<ParseObject>() {
             public void done(List<ParseObject> pedidos, ParseException e) {
@@ -345,9 +360,10 @@ public class MainActivity extends AppCompatActivity {
                                             prefs.commit();
 
                                             Pubnub pubnub = ((EasyRutaApplication)getApplication()).getPubnub();
+                                            pubnub.unsubscribe(getString(R.string.status_pedido_new_pedidos));
                                             pubnub.unsubscribeAll();
 
-                                            Intent intent = new Intent(activity, PedidoPendiente.class);
+                                            Intent intent = new Intent(activity, PedidoPendienteActivity.class);
                                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                             startActivity(intent);
 

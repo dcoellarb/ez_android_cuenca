@@ -1,4 +1,4 @@
-package com.easyruta.easyruta;
+package com.easyruta.easyruta.viewcontroller;
 
 import android.Manifest;
 import android.app.Activity;
@@ -17,6 +17,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.easyruta.easyruta.EasyRutaApplication;
+import com.easyruta.easyruta.R;
+import com.easyruta.easyruta.utils.GPSTracker;
 import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseObject;
@@ -35,7 +38,7 @@ import java.util.Date;
 /**
  * Created by dcoellar on 9/26/15.
  */
-public class PedidoActivo extends Activity {
+public class PedidoActivoActivity extends Activity {
 
     public static String PARAM_ID = "id";
     private GPSTracker gpsTracker;

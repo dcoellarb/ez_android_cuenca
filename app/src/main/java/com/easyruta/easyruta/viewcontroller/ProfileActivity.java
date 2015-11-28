@@ -1,4 +1,4 @@
-package com.easyruta.easyruta;
+package com.easyruta.easyruta.viewcontroller;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -19,6 +19,9 @@ import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.easyruta.easyruta.EasyRutaApplication;
+import com.easyruta.easyruta.R;
+import com.easyruta.easyruta.viewcontroller.MainActivity;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
@@ -141,7 +144,8 @@ public class ProfileActivity extends AppCompatActivity {
                 currentTipo.setBackgroundResource(R.drawable.tipo_background);
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                currentTipoText.setTextColor(getColor(R.color.white));
+                //currentTipoText.setTextColor(getColor(R.color.white));
+                currentTipoText.setTextColor(getResources().getColor(R.color.white));
             }else{
                 currentTipoText.setTextColor(getResources().getColor(R.color.white));
             }
@@ -169,7 +173,8 @@ public class ProfileActivity extends AppCompatActivity {
             currentTipo.setBackgroundResource(R.drawable.tipo_background_selected);
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            currentTipoText.setTextColor(getColor(R.color.yellow));
+            //currentTipoText.setTextColor(getColor(R.color.orange));
+            currentTipoText.setTextColor(getResources().getColor(R.color.orange));
         }else{
             currentTipoText.setTextColor(getResources().getColor(R.color.orange));
         }

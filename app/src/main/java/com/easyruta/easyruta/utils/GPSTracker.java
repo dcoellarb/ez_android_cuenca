@@ -1,4 +1,4 @@
-package com.easyruta.easyruta;
+package com.easyruta.easyruta.utils;
 
 import android.app.AlertDialog;
 import android.app.Service;
@@ -16,6 +16,7 @@ import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
 
+import com.easyruta.easyruta.R;
 import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseObject;
@@ -42,13 +43,13 @@ public class GPSTracker extends Service implements LocationListener {
     private final Context mContext;
 
     // flag for GPS Status
-    boolean isGPSEnabled = false;
+    public boolean isGPSEnabled = false;
 
     // flag for network status
-    boolean isNetworkEnabled = false;
+    public boolean isNetworkEnabled = false;
 
     // flag for GPS Tracking is enabled
-    boolean isGPSTrackingEnabled = false;
+    public boolean isGPSTrackingEnabled = false;
 
     Location location;
     double latitude;

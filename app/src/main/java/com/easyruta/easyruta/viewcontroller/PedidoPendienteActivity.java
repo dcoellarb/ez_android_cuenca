@@ -1,4 +1,4 @@
-package com.easyruta.easyruta;
+package com.easyruta.easyruta.viewcontroller;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -13,6 +13,8 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.easyruta.easyruta.EasyRutaApplication;
+import com.easyruta.easyruta.R;
 import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseObject;
@@ -30,7 +32,7 @@ import java.util.Calendar;
 /**
  * Created by dcoellar on 9/26/15.
  */
-public class PedidoPendiente extends Activity {
+public class PedidoPendienteActivity extends Activity {
 
     public static String PARAM_ID = "id";
     private Activity activity;
@@ -85,7 +87,7 @@ public class PedidoPendiente extends Activity {
                     Pubnub pubnub = ((EasyRutaApplication)getApplication()).getPubnub();
                     pubnub.unsubscribeAll();
 
-                    Intent intent = new Intent(activity, PedidoActivo.class);
+                    Intent intent = new Intent(activity, PedidoActivoActivity.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
                 }

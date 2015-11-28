@@ -1,4 +1,4 @@
-package com.easyruta.easyruta;
+package com.easyruta.easyruta.view;
 
 import android.content.Context;
 import android.graphics.Bitmap;
