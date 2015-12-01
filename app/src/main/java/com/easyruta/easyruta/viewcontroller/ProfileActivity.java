@@ -21,7 +21,6 @@ import android.widget.TextView;
 
 import com.easyruta.easyruta.EasyRutaApplication;
 import com.easyruta.easyruta.R;
-import com.easyruta.easyruta.viewcontroller.MainActivity;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
@@ -215,7 +214,7 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void loadProfile(){
-        transportista = ((EasyRutaApplication)getApplication()).getTransportista();
+        transportista = ((EasyRutaApplication)getApplication()).getDataService().getTransportista();
         nombre.setText(transportista.getString("Nombre"));
         ci_ruc.setText(transportista.getString("Cedula"));
         telefono.setText(transportista.getString("Telefono"));

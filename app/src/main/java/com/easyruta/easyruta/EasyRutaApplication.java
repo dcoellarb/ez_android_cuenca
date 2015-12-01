@@ -27,6 +27,7 @@ public class EasyRutaApplication extends Application  {
         application = this;
         dataService = new DataService(this);
         pubnubService = new PubnubService();
+        redirectService = new RedirectService();
 
     }
 

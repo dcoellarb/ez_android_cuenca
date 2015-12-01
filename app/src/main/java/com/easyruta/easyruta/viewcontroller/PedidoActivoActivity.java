@@ -10,7 +10,6 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -19,21 +18,15 @@ import android.widget.Toast;
 
 import com.easyruta.easyruta.EasyRutaApplication;
 import com.easyruta.easyruta.R;
-import com.easyruta.easyruta.utils.GPSTracker;
-import com.parse.GetCallback;
+import com.easyruta.easyruta.utils.utils;
+import com.easyruta.easyruta.viewmodel.PedidoActivoViewModel;
 import com.parse.ParseException;
 import com.parse.ParseObject;
-import com.parse.ParseQuery;
-import com.parse.SaveCallback;
-import com.pubnub.api.Callback;
 import com.pubnub.api.Pubnub;
-import com.pubnub.api.PubnubError;
-import com.pubnub.api.PubnubException;
 import com.squareup.picasso.Picasso;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Date;
 
 /**
  * Created by dcoellar on 9/26/15.
@@ -41,76 +34,29 @@ import java.util.Date;
 public class PedidoActivoActivity extends Activity {
 
     public static String PARAM_ID = "id";
-    private GPSTracker gpsTracker;
     private Activity activity;
+    private PedidoActivoViewModel viewModel;
     private ImageView navImageView;
     private LinearLayout iniciar;
     private LinearLayout finalizar;
+    private LinearLayout cancelar;
     private String contactoNumber = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         activity = this;
-
         setContentView(R.layout.activity_pedido_activo);
-
-        pubNubSuscriptions();
-
+        viewModel = new PedidoActivoViewModel(this);
+        viewModel.pubNubSuscriptions();
         loadPedido();
-    }
-
-    private void pubNubSuscriptions() {
-        try {
-            ((EasyRutaApplication) getApplication()).getPubnub().subscribe(getString(R.string.status_pedido_cancelado), new Callback() {
-                public void successCallback(String channel, Object message) {
-                    new AlertDialog.Builder(activity)
-                            .setTitle("Pedido cancelado")
-                            .setMessage("El cliente ha cancelado este pedido.")
-                            .setPositiveButton("Continuar", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    closeActivity();
-                                }
-                            })
-                            .setIcon(android.R.drawable.ic_dialog_alert)
-                            .show();
-                }
-
-                public void errorCallback(String channel, PubnubError error) {
-                    Log.e("ERROR", error.getErrorString());
-                }
-            });
-
-        } catch (PubnubException e) {
-            e.printStackTrace();
-        }
     }
 
     private void loadPedido() {
         SharedPreferences prefs = this.getSharedPreferences("easyruta", MODE_PRIVATE);
         final String id = prefs.getString("pedido", "");
 
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
-        query.whereEqualTo("objectId", id);
-        query.getFirstInBackground(new GetCallback<ParseObject>() {
-            @Override
-            public void done(ParseObject object, ParseException e) {
-                if (e == null && object != null) {
-                    setPedido(object);
-                    if (object.getString("Estado").equalsIgnoreCase(getString(R.string.status_parse_encurso))) {
-                        toggleEstado();
-                    }
-                } else {
-                    Log.e("ERROR", "Could not get pedido");
-                    if (e != null) {
-                        Log.e("ERROR", e.getMessage());
-                    } else {
-                        Log.e("ERROR", "result is null for id:" + id);
-                    }
-                }
-            }
-        });
+        viewModel.getPedido(id);
 
         ImageView phoneImageView = (ImageView) findViewById(R.id.pedido_call);
         phoneImageView.setOnClickListener(new View.OnClickListener() {
@@ -131,111 +77,59 @@ public class PedidoActivoActivity extends Activity {
             public void onClick(View view) {
                 if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     String[] permissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION};
-                    requestPermissions(permissions,1);
-                }else{
+                    requestPermissions(permissions, 1);
+                } else {
                     callMap();
                 }
             }
         });
 
-        iniciar = (LinearLayout)findViewById(R.id.pedido_iniciar);
+        iniciar = (LinearLayout) findViewById(R.id.pedido_iniciar);
+        finalizar = (LinearLayout) findViewById(R.id.pedido_finalizar);
+        cancelar = (LinearLayout)findViewById(R.id.pedido_cancelar);
         iniciar.setOnClickListener(new View.OnClickListener() {
-
             @Override
             public void onClick(View view) {
-                ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
-                query.getInBackground(id, new GetCallback<ParseObject>() {
-
-                    public void done(final ParseObject pedido, ParseException e) {
-                        if (e == null) {
-                            final EasyRutaApplication application = (EasyRutaApplication) getApplication();
-
-                            pedido.put("HoraInicio", new Date());
-                            pedido.put("Estado", getString(R.string.status_parse_encurso));
-                            pedido.saveInBackground(new SaveCallback() {
-                                @Override
-                                public void done(ParseException e) {
-                                    if (e == null) {
-                                        application.getPubnub().publish(getString(R.string.status_pedido_iniciado), id, new Callback() {});
-
-                                        toggleEstado();
-                                    }
-                                }
-                            });
-                        }
-                    }
-                });
+                viewModel.iniciarPedido();
             }
-
         });
-
-        finalizar = (LinearLayout)findViewById(R.id.pedido_finalizar);
         finalizar.setOnClickListener(new View.OnClickListener() {
-
             @Override
             public void onClick(View view) {
-                ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
-                query.getInBackground(id, new GetCallback<ParseObject>() {
-
-                    public void done(final ParseObject pedido, ParseException e) {
-                        if (e == null) {
-                            final EasyRutaApplication application = (EasyRutaApplication) getApplication();
-
-                            pedido.put("HoraFinalizacion", new Date());
-                            pedido.put("Estado", getString(R.string.status_parse_finalizado));
-                            pedido.saveInBackground(new SaveCallback() {
-                                @Override
-                                public void done(ParseException e) {
-                                    if (e == null) {
-
-                                        ((EasyRutaApplication)getApplication()).getTransportista().increment("PedidosCompletados", 1);
-                                        ((EasyRutaApplication)getApplication()).getTransportista().saveInBackground();
-
-                                        application.getPubnub().publish(getString(R.string.status_pedido_finalizado), id, new Callback() {
-                                        });
-
-                                        gpsTracker.stopUsingGPS();
-
-                                        closeActivity();
-                                    }
-                                }
-                            });
-                        }
-                    }
-                });
-            }
-
-        });
-
-
-        findViewById(R.id.pedido_cancelar).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch (which) {
-                            case DialogInterface.BUTTON_POSITIVE:
-                                cancelPedido(true);
-                                break;
-
-                            case DialogInterface.BUTTON_NEGATIVE:
-                                break;
-                        }
-                    }
-                };
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-                builder.setMessage(R.string.confirmation_cancelar_pedido)
-                        .setPositiveButton("Si", dialogClickListener)
-                        .setNegativeButton("No", dialogClickListener).show();
+                viewModel.finalizarPedido();
             }
         });
+        if (viewModel.isTransportistaIndependiente) {
+            cancelar.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            switch (which) {
+                                case DialogInterface.BUTTON_POSITIVE:
+                                    cancelPedido(true);
+                                    break;
+
+                                case DialogInterface.BUTTON_NEGATIVE:
+                                    break;
+                            }
+                        }
+                    };
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+                    builder.setMessage(R.string.confirmation_cancelar_pedido)
+                            .setPositiveButton("Si", dialogClickListener)
+                            .setNegativeButton("No", dialogClickListener).show();
+                }
+            });
+        }else{
+            cancelar.setVisibility(View.GONE);
+        }
 
     }
 
-    private void setPedido(ParseObject pedido){
-
+    public void setPedido(ParseObject pedido){
         ImageView empresaImage = (ImageView)findViewById(R.id.pedido_company_image);
         TextView contacto = (TextView)findViewById(R.id.pedido_contacto);
         try{
@@ -281,9 +175,9 @@ public class PedidoActivoActivity extends Activity {
             peso.setText(pedido.getNumber("Unidades") + " unidades");
         }
         TextView carga = (TextView)findViewById(R.id.pedido_carga);
-        carga.setText("Carga: " + MainActivity.formatDate(pedido.getDate("HoraCarga")));
+        carga.setText("Carga: " + utils.formatDate(pedido.getDate("HoraCarga")));
         TextView entrega = (TextView)findViewById(R.id.pedido_entrega);
-        entrega.setText("Entrega: " + MainActivity.formatDate(pedido.getDate("HoraEntrega")));
+        entrega.setText("Entrega: " + utils.formatDate(pedido.getDate("HoraEntrega")));
 
         TextView extra = (TextView)findViewById(R.id.pedido_extra);
         if (pedido.getString("TipoTransporte").equalsIgnoreCase("furgon")){
@@ -308,61 +202,26 @@ public class PedidoActivoActivity extends Activity {
 
     }
 
-    private void toggleEstado(){
+    public void toggleEstado(){
         iniciar.setVisibility(View.GONE);
         finalizar.setVisibility(View.VISIBLE);
         navImageView.setVisibility(View.VISIBLE);
-
-        gpsTracker = new GPSTracker(activity);
     }
 
-    private void cancelPedido(final Boolean broadcast){
+    public void cancelPedido(final Boolean broadcast){
         SharedPreferences prefs = this.getSharedPreferences("easyruta", MODE_PRIVATE);
         final String id = prefs.getString("pedido", "");
 
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
-        query.whereEqualTo("objectId", id);
-        query.getFirstInBackground(new GetCallback<ParseObject>() {
-            @Override
-            public void done(ParseObject object, ParseException e) {
-                if (e == null && object != null) {
-                    object.put("Estado", getString(R.string.status_parse_pendiente));
-                    object.remove("Transportista");
-                    object.add("TransportistasCancelados", ((EasyRutaApplication)getApplication()).getTransportista().getObjectId());
-                    object.saveInBackground(new SaveCallback() {
-                        @Override
-                        public void done(ParseException e) {
-
-                            ((EasyRutaApplication)getApplication()).getTransportista().increment("PedidosCancelados", 1);
-                            ((EasyRutaApplication)getApplication()).getTransportista().saveInBackground();
-
-                            if (broadcast) {
-                                ((EasyRutaApplication) activity.getApplication()).getPubnub().publish(getString(R.string.status_pedido_cancelado_transportista), id, new Callback() {
-                                });
-                            }
-
-                            closeActivity();;
-                        }
-                    });
-                } else {
-                    Log.e("ERROR", "Could not get pedido:" + id);
-                    if (e != null) {
-                        Log.e("ERROR", e.getMessage());
-                    } else {
-                        Log.e("ERROR", "result is null for id:" + id);
-                    }
-                }
-            }
-        });
+        viewModel.cancelarPedido();
     }
 
-    private void closeActivity(){
+    public void closeActivity(){
         SharedPreferences.Editor prefs = activity.getSharedPreferences("easyruta", MODE_PRIVATE).edit();
         prefs.remove("pedido");
         prefs.remove("estado");
         prefs.commit();
 
-        Pubnub pubnub = ((EasyRutaApplication)getApplication()).getPubnub();
+        Pubnub pubnub = ((EasyRutaApplication)getApplication()).getPubnubService().getPubnub();
         pubnub.unsubscribeAll();
 
         Intent i = new Intent(getBaseContext(), MainActivity.class);
@@ -390,8 +249,8 @@ public class PedidoActivoActivity extends Activity {
 
     private void callMap(){
         if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-            if (gpsTracker.isGPSEnabled && gpsTracker.isGPSTrackingEnabled && gpsTracker.isNetworkEnabled){
-                String uri = "geo:"+ gpsTracker.getLatitude() + "," + gpsTracker.getLongitude();
+            if (viewModel.getGpsTracker().isGPSEnabled && viewModel.getGpsTracker().isGPSTrackingEnabled && viewModel.getGpsTracker().isNetworkEnabled){
+                String uri = "geo:"+ viewModel.getGpsTracker().getLatitude() + "," + viewModel.getGpsTracker().getLongitude();
                 startActivity(new Intent(android.content.Intent.ACTION_VIEW, Uri.parse(uri)));
             }else{
                 Toast toast = new Toast(activity);

@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -15,15 +14,11 @@ import android.widget.TextView;
 
 import com.easyruta.easyruta.EasyRutaApplication;
 import com.easyruta.easyruta.R;
-import com.parse.GetCallback;
+import com.easyruta.easyruta.utils.utils;
+import com.easyruta.easyruta.viewmodel.PedidoPendienteViewModel;
 import com.parse.ParseException;
 import com.parse.ParseObject;
-import com.parse.ParseQuery;
-import com.parse.SaveCallback;
-import com.pubnub.api.Callback;
 import com.pubnub.api.Pubnub;
-import com.pubnub.api.PubnubError;
-import com.pubnub.api.PubnubException;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -35,116 +30,34 @@ import java.util.Calendar;
 public class PedidoPendienteActivity extends Activity {
 
     public static String PARAM_ID = "id";
+
     private Activity activity;
+    private PedidoPendienteViewModel viewModel;
     private ProgressBar progressBar;
     private TextView counter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         activity = this;
-
         setContentView(R.layout.activity_pedido_pendiente);
-
-        pubNubSuscriptions();
-
-        loadPedido();
+        viewModel = new PedidoPendienteViewModel(this);
     }
 
-    private void pubNubSuscriptions(){
-        try {
-            ((EasyRutaApplication)getApplication()).getPubnub().subscribe(getString(R.string.status_pedido_rechazado), new Callback() {
-                public void successCallback(String channel, Object message) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            new AlertDialog.Builder(activity)
-                                    .setTitle("Pedido no aceptado")
-                                    .setMessage("El cliente no ha aceptado este pedido.")
-                                    .setPositiveButton("Continuar", new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            cancelActivity();
-                                        }
-                                    })
-                                    .setIcon(android.R.drawable.ic_dialog_alert)
-                                    .show();
-                        }
-                    });
-                }
-
-                public void errorCallback(String channel, PubnubError error) {
-                    Log.e("ERROR",error.getErrorString());
-                }
-            });
-
-            ((EasyRutaApplication)getApplication()).getPubnub().subscribe(getString(R.string.status_pedido_confirmado), new Callback() {
-                public void successCallback(String channel, Object message) {
-                    SharedPreferences.Editor prefs = activity.getSharedPreferences("easyruta", MODE_PRIVATE).edit();
-                    prefs.putString("estado",getString(R.string.status_parse_activo));
-                    prefs.commit();
-
-                    Pubnub pubnub = ((EasyRutaApplication)getApplication()).getPubnub();
-                    pubnub.unsubscribeAll();
-
-                    Intent intent = new Intent(activity, PedidoActivoActivity.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(intent);
-                }
-
-                public void errorCallback(String channel, PubnubError error) {
-                    Log.e("ERROR",error.getErrorString());
-                }
-            });
-
-            ((EasyRutaApplication)getApplication()).getPubnub().subscribe(getString(R.string.status_pedido_cancelado), new Callback() {
-                public void successCallback(String channel, Object message) {
-                    new AlertDialog.Builder(activity)
-                            .setTitle("Pedido cancelado")
-                            .setMessage("El cliente ha cancelado este pedido.")
-                            .setPositiveButton("Continuar", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    cancelActivity();
-                                }
-                            })
-                            .setIcon(android.R.drawable.ic_dialog_alert)
-                            .show();
-                }
-
-                public void errorCallback(String channel, PubnubError error) {
-                    Log.e("ERROR",error.getErrorString());
-                }
-            });
-
-        } catch (PubnubException e) {
-            e.printStackTrace();
-        }
+    @Override
+    protected void onResume(){
+        super.onResume();
+        viewModel.pubNubSuscriptions();
+        loadPedido();
     }
 
     private void loadPedido(){
         SharedPreferences prefs = this.getSharedPreferences("easyruta", MODE_PRIVATE);
-        final String id = prefs.getString("pedido", "");
-
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
-        query.whereEqualTo("objectId", id);
-        query.getFirstInBackground(new GetCallback<ParseObject>() {
-            @Override
-            public void done(ParseObject object, ParseException e) {
-                if (e == null && object != null) {
-                    setPedido(object);
-                } else {
-                    Log.e("ERROR", "Could not get pedido");
-                    if (e != null) {
-                        Log.e("ERROR", e.getMessage());
-                    } else {
-                        Log.e("ERROR", "result is null for id:" + id);
-                    }
-                }
-            }
-        });
+        String id = prefs.getString("pedido", "");
+        viewModel.getPedido(id);
     }
 
-    private void setPedido(ParseObject pedido){
+    public void setPedido(ParseObject pedido){
         TextView viaje = (TextView)findViewById(R.id.pedido_viaje);
         try{
             String origen  = pedido.getParseObject("CiudadOrigen").fetchIfNeeded().getString("Nombre");
@@ -167,9 +80,9 @@ public class PedidoPendienteActivity extends Activity {
         }
 
         TextView carga = (TextView)findViewById(R.id.pedido_carga);
-        carga.setText("Carga: " + MainActivity.formatDate(pedido.getDate("HoraCarga")));
+        carga.setText("Carga: " + utils.formatDate(pedido.getDate("HoraCarga")));
         TextView entrega = (TextView)findViewById(R.id.pedido_entrega);
-        entrega.setText("Entrega: " + MainActivity.formatDate(pedido.getDate("HoraEntrega")));
+        entrega.setText("Entrega: " + utils.formatDate(pedido.getDate("HoraEntrega")));
 
         TextView extra = (TextView)findViewById(R.id.pedido_extra);
         if (pedido.getString("TipoTransporte").equalsIgnoreCase("furgon")){
@@ -193,29 +106,33 @@ public class PedidoPendienteActivity extends Activity {
         comision.setText("$" + formatter.format(pedido.getNumber("Comision")));
 
         LinearLayout cancelar = (LinearLayout)findViewById(R.id.pedido_pendiente_cancelar);
-        cancelar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch (which) {
-                            case DialogInterface.BUTTON_POSITIVE:
-                                cancelPedido(true);
-                                break;
+        if (viewModel.isTransportistaIndependiente) {
+            cancelar.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            switch (which) {
+                                case DialogInterface.BUTTON_POSITIVE:
+                                    cancelPedido();
+                                    break;
 
-                            case DialogInterface.BUTTON_NEGATIVE:
-                                break;
+                                case DialogInterface.BUTTON_NEGATIVE:
+                                    break;
+                            }
                         }
-                    }
-                };
+                    };
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-                builder.setMessage(R.string.confirmation_cancelar_pedido)
-                        .setPositiveButton("Si", dialogClickListener)
-                        .setNegativeButton("No", dialogClickListener).show();
-            }
-        });
+                    AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+                    builder.setMessage(R.string.confirmation_cancelar_pedido)
+                            .setPositiveButton("Si", dialogClickListener)
+                            .setNegativeButton("No", dialogClickListener).show();
+                }
+            });
+        }else{
+            cancelar.setVisibility(View.GONE);
+        }
 
         Calendar calEnd = Calendar.getInstance();
         calEnd.setTime(pedido.getDate("HoraSeleccion"));
@@ -244,55 +161,24 @@ public class PedidoPendienteActivity extends Activity {
             }
 
             public void onFinish() {
-                cancelPedido(false);
+                cancelPedido();
             }
         }.start();
 
 
     }
 
-    private void cancelPedido(final Boolean broadcast){
-        SharedPreferences prefs = this.getSharedPreferences("easyruta", MODE_PRIVATE);
-        final String id = prefs.getString("pedido", "");
-
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
-        query.whereEqualTo("objectId", id);
-        query.getFirstInBackground(new GetCallback<ParseObject>() {
-            @Override
-            public void done(ParseObject object, ParseException e) {
-                if (e == null && object != null){
-                    object.put("Estado",getString(R.string.status_parse_pendiente));
-                    object.remove("Transportista");
-                    object.saveInBackground(new SaveCallback() {
-                        @Override
-                        public void done(ParseException e) {
-                            if (broadcast) {
-                                ((EasyRutaApplication) activity.getApplication()).getPubnub().publish(getString(R.string.status_pedido_cancelado_transportista), id, new Callback() {
-                                });
-                            }
-
-                            cancelActivity();
-                        }
-                    });
-                }else{
-                    Log.e("ERROR", "Could not get pedido");
-                    if (e != null){
-                        Log.e("ERROR",e.getMessage());
-                    }else{
-                        Log.e("ERROR","result is null for id:" + id);
-                    }
-                }
-            }
-        });
+    private void cancelPedido(){
+        viewModel.cancelarPedido();
     }
 
-    private void cancelActivity(){
+    public void cancelActivity(){
         SharedPreferences.Editor prefs = activity.getSharedPreferences("easyruta",MODE_PRIVATE).edit();
         prefs.remove("pedido");
         prefs.remove("estado");
         prefs.commit();
 
-        Pubnub pubnub = ((EasyRutaApplication)getApplication()).getPubnub();
+        Pubnub pubnub = ((EasyRutaApplication)getApplication()).getPubnubService().getPubnub();
         pubnub.unsubscribeAll();
 
         Intent i = new Intent(getBaseContext(), MainActivity.class);

@@ -18,11 +18,12 @@ public class PubnubService {
     public static String PEDIDO_COMPLETADO = "pedido_completado";
     public static String PEDIDO_CANCELADO = "pedido_cancelado";
     public static String PEDIDO_CANCELADO_TRANSPORTISTA = "pedido_cancelado_transportista";
-    public static String PEDIDO_CANCELADO_PR0VOEEDOR = "pedido_cancelado_proveedor";
+    public static String PEDIDO_CANCELADO_PROVOEEDOR = "pedido_cancelado_proveedor";
     public static String PEDIDO_CANCELADO_CONFIRMADO = "pedido_cancelado_confirmado";
     public static String PEDIDO_CANCELADO_CONFIRMADO_TRANSPORTISTA = "pedido_cancelado_confirmado_transportista";
     public static String PEDIDO_CANCELADO_CONFIRMADO_PROVEEDOR = "pedido_cancelado_confirmado_proveedor";
 
+    private String uuid;
     private Pubnub pubnub;
 
     public PubnubService(){
@@ -32,7 +33,7 @@ public class PubnubService {
         pubnub.setUUID(uuid);
 
     }
-
+    public String getUuid() { return uuid; }
     public Pubnub getPubnub() {
         return pubnub;
     }
