@@ -3,6 +3,8 @@ package com.easyruta.easyruta.viewcontroller;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -31,11 +33,12 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
 
     private MainViewModel viewModel;
     private LayoutInflater inflater;
     private ListView pedidosList;
+    private SwipeRefreshLayout swipeLayout;
     private PedidosAdapter pedidosAdapter;
     private Activity activity;
     private Number saldo;
@@ -48,7 +51,19 @@ public class MainActivity extends AppCompatActivity {
         activity = this;
         viewModel = new MainViewModel(this);
 
+        swipeLayout = (SwipeRefreshLayout) findViewById(R.id.swipeToRefresh);
+        swipeLayout.setOnRefreshListener(this);
+
         ParseAnalytics.trackAppOpenedInBackground(getIntent());
+    }
+
+    @Override public void onRefresh() {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                swipeLayout.setRefreshing(false);
+            }
+        }, 3000);
     }
 
     @Override
