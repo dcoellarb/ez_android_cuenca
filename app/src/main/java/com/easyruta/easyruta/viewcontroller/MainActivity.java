@@ -3,7 +3,6 @@ package com.easyruta.easyruta.viewcontroller;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
@@ -57,13 +56,9 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         ParseAnalytics.trackAppOpenedInBackground(getIntent());
     }
 
-    @Override public void onRefresh() {
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                swipeLayout.setRefreshing(false);
-            }
-        }, 3000);
+    @Override
+    public void onRefresh() {
+        getSaldo();
     }
 
     @Override
@@ -104,6 +99,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     }
 
     public void updatePedidos(List<ParseObject> pedidos){
+        swipeLayout.setRefreshing(false);
         pedidosAdapter.updatePedidos(pedidos);
     }
 
