@@ -370,8 +370,22 @@
                 </LinearLayout>
             </LinearLayout>
             <LinearLayout
+                android:id="@+id/cerrar_session"
+                android:layout_marginTop="20dp"
+                android:background="@color/orange"
                 android:layout_width="match_parent"
-                android:layout_height="100dp"/>
+                android:layout_height="60dp">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="Cerrar Session"
+                    android:textColor="@color/white"
+                    android:gravity="center|center"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="100dp">
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

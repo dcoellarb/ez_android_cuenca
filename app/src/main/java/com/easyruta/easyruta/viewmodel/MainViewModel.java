@@ -178,7 +178,17 @@ public class MainViewModel {
                     public void errorCallback(String channel, PubnubError error) {
                         Log.e("ERROR", error.getErrorString());
                     }
-                });            }
+                });
+                pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_TIMEOUT, new Callback() {
+                    public void successCallback(String channel, Object message) {
+                        getPedidosPendientes();
+                    }
+
+                    public void errorCallback(String channel, PubnubError error) {
+                        Log.e("ERROR", error.getErrorString());
+                    }
+                });
+            }
 
             pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_TOMADO, new Callback() {
                 public void successCallback(String channel, Object message) {

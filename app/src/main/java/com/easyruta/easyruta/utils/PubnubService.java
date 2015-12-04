@@ -22,6 +22,7 @@ public class PubnubService {
     public static String PEDIDO_CANCELADO_CONFIRMADO = "pedido_cancelado_confirmado";
     public static String PEDIDO_CANCELADO_CONFIRMADO_TRANSPORTISTA = "pedido_cancelado_confirmado_transportista";
     public static String PEDIDO_CANCELADO_CONFIRMADO_PROVEEDOR = "pedido_cancelado_confirmado_proveedor";
+    public static String PEDIDO_TIMEOUT = "pedido_timeout";
 
     private String uuid;
     private Pubnub pubnub;

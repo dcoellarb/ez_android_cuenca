@@ -21,9 +21,11 @@ import android.widget.TextView;
 
 import com.easyruta.easyruta.EasyRutaApplication;
 import com.easyruta.easyruta.R;
+import com.parse.LogOutCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
+import com.parse.ParseUser;
 import com.parse.SaveCallback;
 import com.squareup.picasso.Picasso;
 
@@ -128,6 +130,20 @@ public class ProfileActivity extends AppCompatActivity {
             public void onClick(View view) {
                 tipo = "ninera";
                 setTipo(view);
+            }
+        });
+
+        findViewById(R.id.cerrar_session).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ParseUser.getCurrentUser().logOutInBackground(new LogOutCallback() {
+                    @Override
+                    public void done(ParseException e) {
+                        Intent intent = new Intent(activity, LoginActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        activity.startActivity(intent);
+                    }
+                });
             }
         });
 

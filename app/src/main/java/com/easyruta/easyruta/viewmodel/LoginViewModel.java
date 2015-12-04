@@ -37,9 +37,11 @@ public class LoginViewModel {
                         redirectService.redirectByUser(application, activity);
                     } else {
                         Log.e("ERROR", "Error singing up user is null");
+                        activity.showError();
                     }
                 } else {
                     Log.e("ERROR", "Error singing up:" + e.getMessage());
+                    activity.showError();
                 }
             }
         });

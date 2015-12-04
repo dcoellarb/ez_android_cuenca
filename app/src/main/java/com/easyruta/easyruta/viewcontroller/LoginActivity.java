@@ -2,9 +2,11 @@ package com.easyruta.easyruta.viewcontroller;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.easyruta.easyruta.R;
 import com.easyruta.easyruta.viewmodel.LoginViewModel;
@@ -37,5 +39,11 @@ public class LoginActivity extends Activity{
                 viewModel.Login(login.getText().toString(), password.getText().toString());
             }
         });
+    }
+
+    public void showError(){
+        Toast toast = Toast.makeText(this, "Usuario y/o clave incorrectos.", Toast.LENGTH_LONG);
+        toast.setGravity(Gravity.TOP|Gravity.CENTER, 0, 0);
+        toast.show();
     }
 }
