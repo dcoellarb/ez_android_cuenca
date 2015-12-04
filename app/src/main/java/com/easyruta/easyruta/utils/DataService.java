@@ -1,5 +1,7 @@
 package com.easyruta.easyruta.utils;
 
+import android.util.Log;
+
 import com.easyruta.easyruta.Constants;
 import com.easyruta.easyruta.EasyRutaApplication;
 import com.parse.FindCallback;
@@ -8,6 +10,7 @@ import com.parse.LogInCallback;
 import com.parse.Parse;
 import com.parse.ParseACL;
 import com.parse.ParseException;
+import com.parse.ParseInstallation;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
@@ -44,8 +47,10 @@ public class DataService {
 
         dataService = this;
 
+        Parse.setLogLevel(Log.VERBOSE);
         Parse.enableLocalDatastore(application);
         Parse.initialize(application, Constants.PARSE_APPLICATION_ID, Constants.PARSE_CLIENT_KEY);
+        ParseInstallation.getCurrentInstallation().saveInBackground();
 
     }
 

@@ -8,6 +8,7 @@ import com.easyruta.easyruta.utils.RedirectService;
 import com.easyruta.easyruta.viewcontroller.LoginActivity;
 import com.parse.LogInCallback;
 import com.parse.ParseException;
+import com.parse.ParseInstallation;
 import com.parse.ParseUser;
 
 /**
