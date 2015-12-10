@@ -15,6 +15,7 @@ import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.ParseException;
 import com.parse.ParseObject;
+import com.parse.ParseQuery;
 import com.parse.SaveCallback;
 import com.pubnub.api.Callback;
 import com.pubnub.api.Pubnub;
@@ -24,6 +25,7 @@ import com.pubnub.api.PubnubException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -53,7 +55,7 @@ public class MainViewModel {
     }
 
     public void getPedidosPendientes(){
-        dataService.getPedidoPendientes(transportista,new FindCallback<ParseObject>() {
+        dataService.getPedidoPendientes(transportista, new FindCallback<ParseObject>() {
             public void done(List<ParseObject> pedidos, ParseException e) {
                 if (e == null) {
                     activity.updatePedidos(pedidos);
@@ -246,6 +248,16 @@ public class MainViewModel {
                         Log.e("ERROR", error.getErrorString());
                     }
                 });
+
+                pubnubService.getPubnub().subscribe(pubnubService.TRANSPORTISTA_HABILITADO, new Callback() {
+                    public void successCallback(String channel, Object message) {
+                        refreshTransportista();
+                    }
+
+                    public void errorCallback(String channel, PubnubError error) {
+                        Log.e("ERROR", error.getErrorString());
+                    }
+                });
             }
 
 
@@ -281,5 +293,45 @@ public class MainViewModel {
         Intent intent = new Intent(activity, PedidoActivoActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         activity.startActivity(intent);
+    }
+
+    public void MarcarDisponible(){
+        transportista.put("Estado", "disponible");
+        transportista.put("HoraDisponible", new Date());
+        transportista.saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                if (e == null) {
+
+                    application.getPubnubService().getPubnub().publish(pubnubService.TRANSPORTISTA_HABILITADO, transportista.getObjectId().toString(), new Callback() {
+                    });
+
+                    activity.toogleDisponible();
+                } else {
+                    Log.e("ERROR", e.getMessage());
+                    Toast toast = new Toast(activity);
+                    toast.setText("No se pudo actualizar su estado en este momento, por favor intente mas tarde");
+                    toast.show();
+                }
+            }
+        });
+    }
+
+    public void refreshTransportista(){
+        ParseQuery<ParseObject> query = ParseQuery.getQuery("Transportista");
+        query.whereEqualTo("objectId",transportista.getObjectId());
+        query.getFirstInBackground(new GetCallback<ParseObject>() {
+            @Override
+            public void done(ParseObject object, ParseException e) {
+                if (e == null){
+                    dataService.setTransportista(object);
+                    activity.toogleDisponible();
+                }
+            }
+        });
+    }
+
+    public ParseObject getTransportista() {
+        return transportista;
     }
 }

@@ -62,9 +62,13 @@ public class PedidoActivoActivity extends Activity {
         phoneImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-                    String[] permissions = new String[]{Manifest.permission.CALL_PHONE};
-                    requestPermissions(permissions,0);
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                    if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                        String[] permissions = new String[]{Manifest.permission.CALL_PHONE};
+                        requestPermissions(permissions,0);
+                    } else {
+                        makeCall();
+                    }
                 }else{
                     makeCall();
                 }
@@ -75,10 +79,14 @@ public class PedidoActivoActivity extends Activity {
         navImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    String[] permissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION};
-                    requestPermissions(permissions, 1);
-                } else {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                    if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        String[] permissions = new String[]{Manifest.permission.ACCESS_FINE_LOCATION};
+                        requestPermissions(permissions, 1);
+                    } else {
+                        callMap();
+                    }
+                }else{
                     callMap();
                 }
             }

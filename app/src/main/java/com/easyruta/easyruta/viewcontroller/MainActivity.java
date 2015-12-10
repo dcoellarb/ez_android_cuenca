@@ -66,7 +66,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         super.onResume();
 
         viewModel.pubNubSuscriptions();
+        viewModel.refreshTransportista();
+    }
 
+    public void toogleDisponible(){
         if (viewModel.isTransportistaIndependiente){
             findViewById(R.id.transportista_home).setVisibility(View.VISIBLE);
             findViewById(R.id.transportista_proveedor_home).setVisibility(View.GONE);
@@ -74,6 +77,22 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         }else{
             findViewById(R.id.transportista_home).setVisibility(View.GONE);
             findViewById(R.id.transportista_proveedor_home).setVisibility(View.VISIBLE);
+            if (viewModel.getTransportista().get("Estado").toString().equalsIgnoreCase("disponible")) {
+                findViewById(R.id.waiting_bar).setVisibility(View.VISIBLE);
+                ((TextView)findViewById(R.id.waiting_message)).setText("Esperando pedido...");
+                findViewById(R.id.waiting_button).setVisibility(View.GONE);
+            }
+            if (viewModel.getTransportista().get("Estado").toString().equalsIgnoreCase("no disponible")) {
+                findViewById(R.id.waiting_bar).setVisibility(View.GONE);
+                ((TextView)findViewById(R.id.waiting_message)).setText("Tu estado es NO Disponible, no puedes recibir pedidos en este momento.");
+                findViewById(R.id.waiting_button).setVisibility(View.VISIBLE);
+                findViewById(R.id.waiting_button).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        viewModel.MarcarDisponible();
+                    }
+                });
+            }
         }
     }
 

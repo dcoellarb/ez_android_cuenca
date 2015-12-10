@@ -78,6 +78,9 @@ public class PedidoActivoViewModel {
             public void done(ParseException e) {
                 if (e == null) {
                     dataService.getTransportista().increment("PedidosCancelados", 1);
+                    if (!isTransportistaIndependiente){
+                        dataService.getTransportista().put("Estado", "no disponible");
+                    }
                     dataService.getTransportista().saveInBackground();
 
                     JSONObject json = new JSONObject();
@@ -103,26 +106,27 @@ public class PedidoActivoViewModel {
             @Override
             public void done(ParseException e) {
                 if (e == null) {
-                    if (e == null) {
-                        dataService.getPedido(pedido.getObjectId().toString(), new GetCallback<ParseObject>() {
-                            @Override
-                            public void done(ParseObject object, ParseException e) {
-                                pedido = object;
-                            }
-                        });
-
-                        JSONObject json = new JSONObject();
-                        try {
-                            json.put("id",pedido.getObjectId().toString());
-                            json.put("uuid", pubnubService.getUuid());
-                        } catch (JSONException e1) {
-                            e1.printStackTrace();
+                    dataService.getPedido(pedido.getObjectId().toString(), new GetCallback<ParseObject>() {
+                        @Override
+                        public void done(ParseObject object, ParseException e) {
+                            pedido = object;
                         }
-                        application.getPubnubService().getPubnub().publish(pubnubService.PEDIDO_INICIADO,json, new Callback() {
-                        });
-                        gpsTracker = new GPSTracker(activity);
-                        activity.toggleEstado();
+                    });
+
+                    JSONObject json = new JSONObject();
+                    try {
+                        json.put("id",pedido.getObjectId().toString());
+                        json.put("uuid", pubnubService.getUuid());
+                    } catch (JSONException e1) {
+                        e1.printStackTrace();
                     }
+
+                    application.getPubnubService().getPubnub().publish(pubnubService.PEDIDO_INICIADO,json, new Callback() {
+                    });
+
+                    gpsTracker = new GPSTracker(activity);
+
+                    activity.toggleEstado();
                 }
             }
         });
@@ -135,6 +139,9 @@ public class PedidoActivoViewModel {
                 if (e == null) {
                     if (e == null) {
                         dataService.getTransportista().increment("PedidosCompletados", 1);
+                        if (!isTransportistaIndependiente){
+                            dataService.getTransportista().put("Estado", "no disponible");
+                        }
                         dataService.getTransportista().saveInBackground();
 
                         JSONObject json = new JSONObject();
@@ -273,6 +280,26 @@ public class PedidoActivoViewModel {
             });
 
             pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_CANCELADO_CONFIRMADO_PROVEEDOR, new Callback() {
+                public void successCallback(String channel, Object message) {
+                    try {
+                        if (pedido.getObjectId().toString().equalsIgnoreCase(((JSONObject)message).getString("id"))) {
+                            activity.runOnUiThread(new Runnable() {
+                                public void run() {
+                                    activity.closeActivity();
+                                }
+                            });
+                        }
+                    }catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                public void errorCallback(String channel, PubnubError error) {
+                    Log.e("ERROR", error.getErrorString());
+                }
+            });
+
+            pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_COMPLETADO, new Callback() {
                 public void successCallback(String channel, Object message) {
                     try {
                         if (pedido.getObjectId().toString().equalsIgnoreCase(((JSONObject)message).getString("id"))) {

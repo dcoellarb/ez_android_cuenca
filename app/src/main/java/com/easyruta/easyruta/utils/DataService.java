@@ -165,7 +165,6 @@ public class DataService {
                 pedido.put("Estado", dataService.PENDIENTE_CONFIRMACION);
                 pedido.put("Transportista", transportista);
                 pedido.saveInBackground(callback);
-
             }
         });
     }
