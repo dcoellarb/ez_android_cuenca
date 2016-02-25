@@ -10,7 +10,6 @@ import com.parse.LogInCallback;
 import com.parse.Parse;
 import com.parse.ParseACL;
 import com.parse.ParseException;
-import com.parse.ParseInstallation;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
@@ -50,7 +49,7 @@ public class DataService {
         Parse.setLogLevel(Log.VERBOSE);
         Parse.enableLocalDatastore(application);
         Parse.initialize(application, Constants.PARSE_APPLICATION_ID, Constants.PARSE_CLIENT_KEY);
-        ParseInstallation.getCurrentInstallation().saveInBackground();
+        //ParseInstallation.getCurrentInstallation().saveInBackground();
 
     }
 
@@ -102,24 +101,42 @@ public class DataService {
         ParseUser.logInInBackground(user, password, callback);
     }
     public void getPedidoPendientes(ParseObject transportista,FindCallback<ParseObject> callback){
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
-        query.whereEqualTo("Estado", dataService.PENDIENTE);
-        query.whereLessThanOrEqualTo("Comision", transportista.get("Saldo"));
-        query.whereNotEqualTo("TransportistasBloqueados", transportista.getObjectId());
-        query.whereNotEqualTo("TransportistasCancelados", transportista.getObjectId());
-        query.whereEqualTo("TipoTransporte", transportista.getString("TipoTransporte"));
-        if (transportista.getString("TipoTransporte").equalsIgnoreCase("plataforma") || transportista.getString("TipoTransporte").equalsIgnoreCase("furgon")){
-            if (transportista.get("TipoTransporte").toString().equalsIgnoreCase("plataforma")){
-                query.whereLessThanOrEqualTo("ExtensionMin", transportista.get("ExtensionMinima"));
-            }else{
-                query.whereLessThanOrEqualTo("CubicajeMin", transportista.get("CubicajeMinimo"));
-                if (!transportista.getBoolean("Refrigerado")){
-                    query.whereEqualTo("Refrigerado", false);
-                }
-            }
+        if (transportista.getString("TipoTransporte").equalsIgnoreCase("furgon") || transportista.getString("TipoTransporte").equalsIgnoreCase("plataforma")){
+            //Or for furgon or plataformar
+            ParseQuery<ParseObject> queryTipo = ParseQuery.getQuery("Pedido");
+            queryTipo.whereEqualTo("TipoTransporte", transportista.getString("TipoTransporte"));
+            ParseQuery<ParseObject> queryTipo1 = ParseQuery.getQuery("Pedido");
+            queryTipo1.whereEqualTo("TipoTransporte", "furgon_plataforma");
+
+            //Create list for or
+            List<ParseQuery<ParseObject>> queries = new ArrayList<ParseQuery<ParseObject>>();
+            queries.add(queryTipo);
+            queries.add(queryTipo1);
+
+            //Combine query
+            ParseQuery<ParseObject> query = ParseQuery.or(queries);
+            //Regular query filters
+            query.whereEqualTo("Estado", dataService.PENDIENTE);
+            query.whereNotEqualTo("TransportistasBloqueados", transportista.getObjectId());
+            query.whereNotEqualTo("TransportistasCancelados", transportista.getObjectId());
+            //Run query
+            query.orderByDescending("createdAt");
+            Log.d("TEST","getting or");
+            query.findInBackground(callback);
+        }else{
+            ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
+            //Regular query filters
+            query.whereEqualTo("Estado", dataService.PENDIENTE);
+            //query.whereLessThanOrEqualTo("Comision", transportista.get("Saldo"));
+            query.whereNotEqualTo("TransportistasBloqueados", transportista.getObjectId());
+            query.whereNotEqualTo("TransportistasCancelados", transportista.getObjectId());
+            //Filter type
+            query.whereEqualTo("TipoTransporte", transportista.getString("TipoTransporte"));
+            //Run query
+            query.orderByDescending("createdAt");
+            Log.d("TEST", "getting normal");
+            query.findInBackground(callback);
         }
-        query.orderByDescending("createdAt");
-        query.findInBackground(callback);
     }
     public void getTransportistaSaldo(ParseObject transportista,GetCallback<ParseObject> callback){
         ParseQuery query = new ParseQuery("Transportista");

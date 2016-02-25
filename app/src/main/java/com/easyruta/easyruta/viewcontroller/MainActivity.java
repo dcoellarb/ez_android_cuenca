@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         pedidosList = (ListView) findViewById(R.id.pedidos_list);
         pedidosAdapter = new PedidosAdapter();
         pedidosList.setAdapter(pedidosAdapter);
-        loadPedidos();
+        this.loadPedidos();
 
     }
 
@@ -181,11 +181,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 e.printStackTrace();
             }
             TextView cantidad = (TextView)convertView.findViewById(R.id.pedido_cantidad);
-            if (pedidos.get(i).getString("TipoUnidad").equalsIgnoreCase("peso")){
-                cantidad.setText("Peso desde:" + String.valueOf(pedidos.get(i).getNumber("PesoDesde")) + " hasta " + String.valueOf(pedidos.get(i).getNumber("PesoHasta")) + " Tn");
-            }else{
-                cantidad.setText(pedidos.get(i).getNumber("Unidades") + " unidades");
-            }
+            cantidad.setText("Peso desde:" + String.valueOf(pedidos.get(i).getNumber("PesoDesde")) + " hasta " + String.valueOf(pedidos.get(i).getNumber("PesoHasta")) + " Tn");
 
             NumberFormat formatter = new DecimalFormat("#0.00");
             TextView precio = (TextView)convertView.findViewById(R.id.pedido_valor);
@@ -194,14 +190,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             carga.setText("Carga: " + utils.formatDate(pedidos.get(i).getDate("HoraCarga")));
             TextView entrega = (TextView)convertView.findViewById(R.id.pedido_entrega);
             entrega.setText("Entrega: " + utils.formatDate(pedidos.get(i).getDate("HoraEntrega")));
-            TextView extra = (TextView)convertView.findViewById(R.id.pedido_extra);
-            if (pedidos.get(i).getString("TipoTransporte").equalsIgnoreCase("furgon")){
-                extra.setText("Cubicaje Minimo:" + pedidos.get(i).getNumber("CubicajeMin") + " m3");
-            }else if (pedidos.get(i).getString("TipoTransporte").equalsIgnoreCase("plataforma")) {
-                extra.setText("Extension Minima:" + pedidos.get(i).getNumber("ExtensionMin") + " pies");
-            }else{
-                extra.setVisibility(View.GONE);
-            }
             TextView refrigeracion = (TextView)convertView.findViewById(R.id.pedido_refrigeracion);
             if (pedidos.get(i).getString("TipoTransporte").equalsIgnoreCase("furgon")) {
                 if (pedidos.get(i).getBoolean("CajaRefrigerada")){
@@ -246,6 +234,9 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                     viewModel.tomarPedido(((ParseObject) view.getTag()).getObjectId().toString());
                 }
             });
+            if (viewModel.getTransportista().getNumber("Saldo").doubleValue() < pedidos.get(i).getNumber("Comision").doubleValue()){
+                tomar.setVisibility(View.GONE);
+            }
 
             return convertView;
         }

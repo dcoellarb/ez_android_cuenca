@@ -177,24 +177,13 @@ public class PedidoActivoActivity extends Activity {
         precio.setText("$" + formatter.format(pedido.getNumber("Valor")));
 
         TextView peso = (TextView)findViewById(R.id.pedido_peso);
-        if (pedido.getString("TipoUnidad").equalsIgnoreCase("peso")){
-            peso.setText("Peso desde:" + String.valueOf(pedido.getNumber("PesoDesde")) + " hasta " + String.valueOf(pedido.getNumber("PesoHasta")) + " Tn");
-        }else{
-            peso.setText(pedido.getNumber("Unidades") + " unidades");
-        }
+        peso.setText("Peso desde:" + String.valueOf(pedido.getNumber("PesoDesde")) + " hasta " + String.valueOf(pedido.getNumber("PesoHasta")) + " Tn");
+
         TextView carga = (TextView)findViewById(R.id.pedido_carga);
         carga.setText("Carga: " + utils.formatDate(pedido.getDate("HoraCarga")));
         TextView entrega = (TextView)findViewById(R.id.pedido_entrega);
         entrega.setText("Entrega: " + utils.formatDate(pedido.getDate("HoraEntrega")));
 
-        TextView extra = (TextView)findViewById(R.id.pedido_extra);
-        if (pedido.getString("TipoTransporte").equalsIgnoreCase("furgon")){
-            extra.setText("Cubicaje Minimo:" + pedido.getNumber("CubicajeMin") + " m3");
-        }else if (pedido.getString("TipoTransporte").equalsIgnoreCase("plataforma")) {
-            extra.setText("Extension Minima:" + pedido.getNumber("ExtensionMin") + " pies");
-        }else{
-            extra.setVisibility(View.GONE);
-        }
         TextView refrigeracion = (TextView)findViewById(R.id.pedido_refrigeracion);
         if (pedido.getString("TipoTransporte").equalsIgnoreCase("furgon")) {
             if (pedido.getBoolean("CajaRefrigerada")){
@@ -211,6 +200,7 @@ public class PedidoActivoActivity extends Activity {
     }
 
     public void toggleEstado(){
+        cancelar.setVisibility(View.GONE);
         iniciar.setVisibility(View.GONE);
         finalizar.setVisibility(View.VISIBLE);
         navImageView.setVisibility(View.VISIBLE);
@@ -256,7 +246,7 @@ public class PedidoActivoActivity extends Activity {
     }
 
     private void callMap(){
-        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             if (viewModel.getGpsTracker().isGPSEnabled && viewModel.getGpsTracker().isGPSTrackingEnabled && viewModel.getGpsTracker().isNetworkEnabled){
                 String uri = "geo:"+ viewModel.getGpsTracker().getLatitude() + "," + viewModel.getGpsTracker().getLongitude();
                 startActivity(new Intent(android.content.Intent.ACTION_VIEW, Uri.parse(uri)));

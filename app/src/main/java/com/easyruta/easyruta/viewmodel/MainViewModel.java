@@ -127,6 +127,7 @@ public class MainViewModel {
 
         try {
             if (isTransportistaIndependiente) {
+                Log.d("TEST DANIEL","subribing");
                 pubnubService.getPubnub().subscribe(pubnubService.NEW_PEDIDOS, new Callback() {
                     public void successCallback(String channel, Object message) {
                         getPedidosPendientes();

@@ -320,22 +320,6 @@
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="Cubicaje Máximo"
-                                android:textColor="@color/grey"
-                                android:textSize="6pt"/>
-                            <EditText
-                                android:id="@+id/profile_cubicaje"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"/>
-                        </LinearLayout>
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:layout_weight="1">
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
                                 android:text="Tiene refrigeracion?"
                                 android:gravity="right"
                                 android:textColor="@color/grey"
@@ -349,23 +333,6 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"/>
                         </LinearLayout>
-                    </LinearLayout>
-                    <LinearLayout
-                        android:id="@+id/profile_plataforma_container"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:visibility="gone"
-                        android:orientation="vertical">
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Extensión Máxima"
-                            android:textColor="@color/grey"
-                            android:textSize="6pt"/>
-                        <EditText
-                            android:id="@+id/profile_extension"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"/>
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>

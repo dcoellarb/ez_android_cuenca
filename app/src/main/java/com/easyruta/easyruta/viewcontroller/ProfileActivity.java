@@ -84,10 +84,6 @@ public class ProfileActivity extends AppCompatActivity {
         anio = (EditText)findViewById(R.id.profile_year);
         anio.setRawInputType(Configuration.KEYBOARD_QWERTY);
         color = (EditText)findViewById(R.id.profile_color);
-        cubicaje = (EditText)findViewById(R.id.profile_cubicaje);
-        cubicaje.setRawInputType(Configuration.KEYBOARD_QWERTY);
-        extension = (EditText)findViewById(R.id.profile_extension);
-        extension.setRawInputType(Configuration.KEYBOARD_QWERTY);
         refrigeracion = (Switch)findViewById(R.id.profile_refrigerado);
 
         findViewById(R.id.profile_tipo_furgon).setOnClickListener(new View.OnClickListener() {
@@ -173,9 +169,6 @@ public class ProfileActivity extends AppCompatActivity {
             if (currentTipoText.getText().toString().equalsIgnoreCase("furgon")){
                 findViewById(R.id.profile_furgon_container).setVisibility(View.GONE);
             }
-            if (currentTipoText.getText().toString().equalsIgnoreCase("plataforma")){
-                findViewById(R.id.profile_plataforma_container).setVisibility(View.GONE);
-            }
         }
 
         currentTipo = (LinearLayout)view;
@@ -201,9 +194,6 @@ public class ProfileActivity extends AppCompatActivity {
 
         if (currentTipoText.getText().toString().equalsIgnoreCase("furgon")){
             findViewById(R.id.profile_furgon_container).setVisibility(View.VISIBLE);
-        }
-        if (currentTipoText.getText().toString().equalsIgnoreCase("plataforma")){
-            findViewById(R.id.profile_plataforma_container).setVisibility(View.VISIBLE);
         }
     }
 
@@ -343,16 +333,6 @@ public class ProfileActivity extends AppCompatActivity {
             transportista.put("photo", file);
         }
         transportista.put("TipoTransporte", tipo);
-        if (cubicaje.getText().toString().length() > 0){
-            transportista.put("CubicajeMinimo", Double.parseDouble(cubicaje.getText().toString()));
-        }else{
-            transportista.remove("CubicajeMinimo");
-        }
-        if (extension.getText().toString().length() > 0){
-            transportista.put("ExtensionMinima", Double.parseDouble(extension.getText().toString()));
-        }else{
-            transportista.remove("ExtensionMinima");
-        }
         transportista.put("Refrigerado", refrigeracion.isChecked());
 
         transportista.saveInBackground(new SaveCallback() {

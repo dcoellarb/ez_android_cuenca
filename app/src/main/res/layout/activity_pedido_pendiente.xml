@@ -96,13 +96,6 @@
                         android:textColor="@color/grey"
                         android:text="Entrega: Maniana a las 6:00am"/>
                     <TextView
-                        android:id="@+id/pedido_extra"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textSize="7pt"
-                        android:textColor="@color/grey"
-                        android:text="Cubicaje: 20 m3"/>
-                    <TextView
                         android:id="@+id/pedido_refrigeracion"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"

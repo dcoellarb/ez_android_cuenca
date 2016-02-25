@@ -33,7 +33,6 @@ import java.util.Locale;
  * For Geocoder read this : http://stackoverflow.com/questions/472313/android-reverse-geocoding-getfromlocation
  *
  */
-
 public class GPSTracker extends Service implements LocationListener {
 
 
@@ -62,7 +61,7 @@ public class GPSTracker extends Service implements LocationListener {
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 100; // 100 meters
 
     // The minimum time between updates in milliseconds
-    private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 5; // 10 minute
+    private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 5; // 5 minute
 
     // Declaring a Location Manager
     protected LocationManager locationManager;
@@ -71,6 +70,7 @@ public class GPSTracker extends Service implements LocationListener {
     private String provider_info;
 
     public GPSTracker(Context context) {
+        Log.d("TEST DANIEL","Create new tracker");
         this.mContext = context;
         getLocation();
     }
@@ -182,7 +182,6 @@ public class GPSTracker extends Service implements LocationListener {
      * Check GPS/wifi is enabled
      */
     public boolean getIsGPSTrackingEnabled() {
-
         return this.isGPSTrackingEnabled;
     }
 
@@ -359,14 +358,17 @@ public class GPSTracker extends Service implements LocationListener {
 
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
+        Log.d("TEST DANIEL","onStatusChanged");
     }
 
     @Override
     public void onProviderEnabled(String provider) {
+        Log.d("TEST DANIEL","onProviderEnabled");
     }
 
     @Override
     public void onProviderDisabled(String provider) {
+        Log.d("TEST DANIEL","onProviderDisabled");
     }
 
     @Override
