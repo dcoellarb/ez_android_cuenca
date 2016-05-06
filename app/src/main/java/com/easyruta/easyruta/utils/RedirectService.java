@@ -131,9 +131,8 @@ public class RedirectService {
                             }
                         }
                     });
-                }else{
-                    //TODO THIS SHOULD BE REMOVED ONCE IS THE APP SUPPORTS OTHER ROLES
-                    subscriber.onError(new EzException(EzExceptions.USER_IS_NOT_CHOFER));
+                } else {
+                    subscriber.onNext(true);
                 }
             }
         });

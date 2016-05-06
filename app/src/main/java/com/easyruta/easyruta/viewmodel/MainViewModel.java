@@ -207,8 +207,8 @@ public class MainViewModel {
     //TODO tomar en cuenta cuando se tenga despachador
     /*
     public void MarcarDisponible(){
-        transportista.put("Estado", "disponible");
-        transportista.put("HoraDisponible", new Date());
+        transportista.put("estado", "disponible");
+        transportista.put("horaDisponible", new Date());
         transportista.saveInBackground(new SaveCallback() {
             @Override
             public void done(ParseException e) {

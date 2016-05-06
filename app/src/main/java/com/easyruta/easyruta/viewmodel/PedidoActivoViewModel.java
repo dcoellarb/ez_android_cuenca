@@ -83,9 +83,8 @@ public class PedidoActivoViewModel {
             public void done(ParseException e) {
                 if (e == null) {
                     if (e == null) {
-                        dataService.getTransportista().increment("PedidosCompletados", 1);
                         if (!isTransportistaIndependiente){
-                            dataService.getTransportista().put("Estado", "no disponible");
+                            dataService.getTransportista().put("estado", "Disponible");
                         }
                         dataService.getTransportista().saveInBackground();
 

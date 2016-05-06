@@ -189,6 +189,7 @@
                             android:textColor="@color/light_gray"
                             android:text="Carga:"/>
                         <TextView
+                            android:id="@+id/pedido_entrega_text"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:layout_weight="1"

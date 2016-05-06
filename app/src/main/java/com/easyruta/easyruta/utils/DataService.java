@@ -142,8 +142,6 @@ public class DataService {
         ParseQuery<ParseObject> query = ParseQuery.getQuery("Chofer");
         query.include("transportista");
         query.whereEqualTo("user", this.user);
-        String id = this.user.getObjectId();
-        Log.d("TEST",id);
         query.getFirstInBackground(callback);
     }
     public void getTransportistaCurrentPedido(GetCallback<ParseObject> callback){

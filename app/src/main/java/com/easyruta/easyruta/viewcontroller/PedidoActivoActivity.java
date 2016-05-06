@@ -151,12 +151,17 @@ public class PedidoActivoActivity extends Activity {
 
 
         TextView peso = (TextView)findViewById(R.id.pedido_peso);
-        peso.setText(pedido.getString("peso"));
+        peso.setText(utils.formatPeso(pedido.getString("peso")));
 
         TextView carga = (TextView)findViewById(R.id.pedido_carga);
-        carga.setText("Carga: " + utils.formatDate(pedido.getDate("horaCarga")));
+        carga.setText(utils.formatDate(pedido.getDate("horaCarga")));
         TextView entrega = (TextView)findViewById(R.id.pedido_entrega);
-        entrega.setText("Entrega: " + utils.formatDate(pedido.getDate("horaEntrega")));
+        if (pedido.getDate("horaEntrega") != null){
+            entrega.setText(utils.formatDate(pedido.getDate("horaEntrega")));
+        }else{
+            findViewById(R.id.pedido_entrega_text).setVisibility(View.GONE);
+            entrega.setVisibility(View.GONE);
+        }
     }
 
     public void toggleEstado(){

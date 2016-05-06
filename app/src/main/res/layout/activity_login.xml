@@ -47,7 +47,7 @@
             android:lines="1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Si aun no tes has registrado ingresa a:"/>
+            android:text="Regístrate ingresando a"/>
         <TextView
             android:id="@+id/easyruta_link"
             android:layout_marginTop="10dp"

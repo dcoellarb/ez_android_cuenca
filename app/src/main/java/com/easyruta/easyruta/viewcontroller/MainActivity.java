@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             findViewById(R.id.transportista_proveedor_home).setVisibility(View.VISIBLE);
             //TODO tomar en cuenta cuando se implmente Despachador
             /*
-            if (viewModel.getTransportista().get("Estado").toString().equalsIgnoreCase("no disponible")) {
+            if (viewModel.getTransportista().get("estado").toString().equalsIgnoreCase("no disponible")) {
                 findViewById(R.id.waiting_bar).setVisibility(View.GONE);
                 ((TextView)findViewById(R.id.waiting_message)).setText("Tu estado es NO Disponible, no puedes recibir pedidos en este momento.");
                 findViewById(R.id.waiting_button).setVisibility(View.VISIBLE);
@@ -182,6 +182,9 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             String destino = pedidos.get(i).getString("ciudadDestino").substring(0, 1).toUpperCase() + pedidos.get(i).getString("ciudadDestino").substring(1).toLowerCase();
             viaje.setText(origen + " - " + destino);
 
+            TextView producto = (TextView)convertView.findViewById(R.id.pedido_producto);
+            producto.setText(pedidos.get(i).getString("producto"));
+
             TextView cantidad = (TextView)convertView.findViewById(R.id.pedido_cantidad);
             cantidad.setText(utils.formatPeso(pedidos.get(i).getString("peso")));
 
@@ -203,8 +206,13 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
             TextView carga = (TextView)convertView.findViewById(R.id.pedido_carga);
             carga.setText("Carga: " + utils.formatDate(pedidos.get(i).getDate("horaCarga")));
-            TextView entrega = (TextView)convertView.findViewById(R.id.pedido_entrega);
-            entrega.setText("Entrega: " + utils.formatDate(pedidos.get(i).getDate("horaEntrega")));
+
+            TextView entrega = (TextView) convertView.findViewById(R.id.pedido_entrega);
+            if (pedidos.get(i).getString("horaEntrega") != null) {
+                entrega.setText("Entrega: " + utils.formatDate(pedidos.get(i).getDate("horaEntrega")));
+            }else{
+                entrega.setVisibility(View.GONE);
+            }
 
             final LinearLayout header = (LinearLayout)convertView.findViewById(R.id.pedido_header);
             header.setOnClickListener(new View.OnClickListener() {
