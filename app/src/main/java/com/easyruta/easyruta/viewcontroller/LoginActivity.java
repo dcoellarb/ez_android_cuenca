@@ -4,8 +4,8 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.easyruta.easyruta.R;
@@ -20,19 +20,27 @@ public class LoginActivity extends Activity{
 
     EditText login;
     EditText password;
-    LinearLayout btnLogin;
+    Button btnLogin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         final Activity activity = this;
+        Bundle b = getIntent().getExtras();
+        if (b != null){
+            String error = b.getString("error");
+            if (error != null) {
+                showError(error);
+            }
+        }
+
         setContentView(R.layout.activity_login);
         viewModel = new LoginViewModel(this);
 
         login = (EditText)findViewById(R.id.login_user);
         password = (EditText)findViewById(R.id.login_password);
-        btnLogin = (LinearLayout)findViewById(R.id.login_login);
+        btnLogin = (Button)findViewById(R.id.login_login);
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -41,9 +49,11 @@ public class LoginActivity extends Activity{
         });
     }
 
-    public void showError(){
-        Toast toast = Toast.makeText(this, "Usuario y/o clave incorrectos.", Toast.LENGTH_LONG);
-        toast.setGravity(Gravity.TOP|Gravity.CENTER, 0, 0);
-        toast.show();
+    public void showError(String error){
+        if (!error.isEmpty()){
+            Toast toast = Toast.makeText(this, error, Toast.LENGTH_LONG);
+            toast.setGravity(Gravity.TOP|Gravity.CENTER, 0, 0);
+            toast.show();
+        }
     }
 }

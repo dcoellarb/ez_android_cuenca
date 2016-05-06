@@ -43,62 +43,8 @@ public class PedidoActivoViewModel {
 
         isTransportistaIndependiente = dataService.getProveedor() == null;
 
-    }
-
-    public void getPedido(final String id){
-        dataService.getPedido(id, new GetCallback<ParseObject>() {
-            @Override
-            public void done(ParseObject object, ParseException e) {
-                if (e == null && object != null) {
-                    pedido = object;
-                    activity.setPedido(object);
-                    if (object.getString("Estado").equalsIgnoreCase(dataService.EN_CURSO)) {
-                        gpsTracker = new GPSTracker(activity);
-                        activity.toggleEstado();
-                    }
-                } else {
-                    Log.e("ERROR", "Could not get pedido");
-                    if (e != null) {
-                        Log.e("ERROR", e.getMessage());
-                    } else {
-                        Log.e("ERROR", "result is null for id:" + id);
-                    }
-                }
-            }
-        });
-    }
-
-    public void cancelarPedido(){
-        String estado = dataService.PENDIENTE;
-        if (pedido.get("Estado").toString().equalsIgnoreCase(dataService.EN_CURSO)){
-            estado = dataService.CANCELADO;
-        }
-        dataService.cancelarPedido(pedido, estado, new SaveCallback() {
-            @Override
-            public void done(ParseException e) {
-                if (e == null) {
-                    dataService.getTransportista().increment("PedidosCancelados", 1);
-                    if (!isTransportistaIndependiente){
-                        dataService.getTransportista().put("Estado", "no disponible");
-                    }
-                    dataService.getTransportista().saveInBackground();
-
-                    JSONObject json = new JSONObject();
-                    try {
-                        json.put("id",pedido.getObjectId().toString());
-                        json.put("uuid", pubnubService.getUuid());
-                    } catch (JSONException e1) {
-                        e1.printStackTrace();
-                    }
-                    pubnubService.getPubnub().publish(pubnubService.PEDIDO_CANCELADO_TRANSPORTISTA, pedido.getObjectId().toString(), new Callback() {
-                    });
-
-                    activity.closeActivity();
-                } else {
-                    Log.e("ERROR", e.getMessage());
-                }
-            }
-        });
+        this.pedido = dataService.getPedido();
+        this.activity.setPedido(dataService.getPedido());
     }
 
     public void iniciarPedido(){
@@ -121,10 +67,9 @@ public class PedidoActivoViewModel {
                         e1.printStackTrace();
                     }
 
-                    application.getPubnubService().getPubnub().publish(pubnubService.PEDIDO_INICIADO,json, new Callback() {
-                    });
+                    application.getPubnubService().getPubnub().publish(pubnubService.PEDIDO_INICIADO,json, new Callback() {});
 
-                    gpsTracker = new GPSTracker(activity);
+                    gpsTracker = new GPSTracker(activity, pedido);
 
                     activity.toggleEstado();
                 }
@@ -151,7 +96,7 @@ public class PedidoActivoViewModel {
                         } catch (JSONException e1) {
                             e1.printStackTrace();
                         }
-                        application.getPubnubService().getPubnub().publish(pubnubService.PEDIDO_COMPLETADO, pedido.getObjectId().toString(), new Callback() {
+                        application.getPubnubService().getPubnub().publish(pubnubService.PEDIDO_FINALIZADO, pedido.getObjectId().toString(), new Callback() {
                         });
 
                         gpsTracker.stopUsingGPS();
@@ -174,7 +119,7 @@ public class PedidoActivoViewModel {
                     try {
                         if (pedido.getObjectId().toString().equalsIgnoreCase(((JSONObject)message).getString("id")) && !isTransportistaIndependiente) {
                             if (!((JSONObject)message).getString("uuid").equalsIgnoreCase(pubnubService.getUuid())) {
-                                gpsTracker = new GPSTracker(activity);
+                                gpsTracker = new GPSTracker(activity, pedido);
                                 activity.runOnUiThread(new Runnable() {
                                     public void run() {
                                         activity.toggleEstado();
@@ -221,85 +166,7 @@ public class PedidoActivoViewModel {
                 }
             });
 
-            pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_CANCELADO_CONFIRMADO, new Callback() {
-                public void successCallback(String channel, Object message) {
-                    try {
-                        if (pedido.getObjectId().toString().equalsIgnoreCase(((JSONObject)message).getString("id"))) {
-                            activity.runOnUiThread (new Runnable() {
-                                public void run() {
-                                    new AlertDialog.Builder(activity)
-                                            .setTitle("Pedido cancelado")
-                                            .setMessage("El cliente ha cancelado este pedido.")
-                                            .setPositiveButton("Continuar", new DialogInterface.OnClickListener() {
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    activity.closeActivity();
-                                                }
-                                            })
-                                            .setIcon(android.R.drawable.ic_dialog_alert)
-                                            .show();
-                                }
-                            });
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                public void errorCallback(String channel, PubnubError error) {
-                    Log.e("ERROR", error.getErrorString());
-                }
-            });
-
-            pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_CANCELADO_CONFIRMADO, new Callback() {
-                public void successCallback(String channel, Object message) {
-                    try {
-                        if (pedido.getObjectId().toString().equalsIgnoreCase(((JSONObject)message).getString("id"))) {
-                            activity.runOnUiThread (new Runnable() {
-                                public void run() {
-                                    new AlertDialog.Builder(activity)
-                                            .setTitle("Pedido cancelado")
-                                            .setMessage("El cliente ha cancelado este pedido.")
-                                            .setPositiveButton("Continuar", new DialogInterface.OnClickListener() {
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    activity.closeActivity();
-                                                }
-                                            })
-                                            .setIcon(android.R.drawable.ic_dialog_alert)
-                                            .show();
-                                }
-                            });
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                public void errorCallback(String channel, PubnubError error) {
-                    Log.e("ERROR", error.getErrorString());
-                }
-            });
-
-            pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_CANCELADO_CONFIRMADO_PROVEEDOR, new Callback() {
-                public void successCallback(String channel, Object message) {
-                    try {
-                        if (pedido.getObjectId().toString().equalsIgnoreCase(((JSONObject)message).getString("id"))) {
-                            activity.runOnUiThread(new Runnable() {
-                                public void run() {
-                                    activity.closeActivity();
-                                }
-                            });
-                        }
-                    }catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                public void errorCallback(String channel, PubnubError error) {
-                    Log.e("ERROR", error.getErrorString());
-                }
-            });
-
-            pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_COMPLETADO, new Callback() {
+            pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_FINALIZADO, new Callback() {
                 public void successCallback(String channel, Object message) {
                     try {
                         if (pedido.getObjectId().toString().equalsIgnoreCase(((JSONObject)message).getString("id"))) {

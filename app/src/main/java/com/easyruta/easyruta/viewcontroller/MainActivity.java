@@ -23,7 +23,6 @@ import com.easyruta.easyruta.R;
 import com.easyruta.easyruta.utils.utils;
 import com.easyruta.easyruta.viewmodel.MainViewModel;
 import com.parse.ParseAnalytics;
-import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.pubnub.api.Pubnub;
 
@@ -58,7 +57,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     @Override
     public void onRefresh() {
-        getSaldo();
+        // TODO temporal solution
+        // getSaldo();
     }
 
     @Override
@@ -73,15 +73,18 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         if (viewModel.isTransportistaIndependiente){
             findViewById(R.id.transportista_home).setVisibility(View.VISIBLE);
             findViewById(R.id.transportista_proveedor_home).setVisibility(View.GONE);
-            getSaldo();
+            this.viewModel.getSaldo();
+
+            pedidosList = (ListView) findViewById(R.id.pedidos_list);
+            pedidosAdapter = new PedidosAdapter();
+            pedidosList.setAdapter(pedidosAdapter);
+            this.viewModel.getPedidosPendientes();
+
         }else{
             findViewById(R.id.transportista_home).setVisibility(View.GONE);
             findViewById(R.id.transportista_proveedor_home).setVisibility(View.VISIBLE);
-            if (viewModel.getTransportista().get("Estado").toString().equalsIgnoreCase("disponible")) {
-                findViewById(R.id.waiting_bar).setVisibility(View.VISIBLE);
-                ((TextView)findViewById(R.id.waiting_message)).setText("Esperando pedido...");
-                findViewById(R.id.waiting_button).setVisibility(View.GONE);
-            }
+            //TODO tomar en cuenta cuando se implmente Despachador
+            /*
             if (viewModel.getTransportista().get("Estado").toString().equalsIgnoreCase("no disponible")) {
                 findViewById(R.id.waiting_bar).setVisibility(View.GONE);
                 ((TextView)findViewById(R.id.waiting_message)).setText("Tu estado es NO Disponible, no puedes recibir pedidos en este momento.");
@@ -93,33 +96,34 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                     }
                 });
             }
+            */
         }
     }
 
-    private void getSaldo(){
-        viewModel.getSaldo();
-    }
-
     public void updateSaldo(ParseObject object){
-        saldo = object.getNumber("Saldo");
+        saldo = object.getNumber("saldo");
+        if (saldo == null){
+            saldo = 0;
+        }
         TextView saldoView = (TextView) findViewById(R.id.saldo);
         NumberFormat formatter = new DecimalFormat("#0.00");
         saldoView.setText("$" + formatter.format(saldo));
-
-        pedidosList = (ListView) findViewById(R.id.pedidos_list);
-        pedidosAdapter = new PedidosAdapter();
-        pedidosList.setAdapter(pedidosAdapter);
-        this.loadPedidos();
-
-    }
-
-    private void loadPedidos(){
-        viewModel.getPedidosPendientes();
     }
 
     public void updatePedidos(List<ParseObject> pedidos){
-        swipeLayout.setRefreshing(false);
-        pedidosAdapter.updatePedidos(pedidos);
+        if ( pedidos.size() >0 ){
+            findViewById(R.id.pedidos_placeholder).setVisibility(View.GONE);
+            swipeLayout.setRefreshing(false);
+            pedidosAdapter.updatePedidos(pedidos);
+        } else {
+            findViewById(R.id.pedidos_placeholder).setVisibility(View.VISIBLE);
+        }
+    }
+
+    public void moveToPedidoActivo(ParseObject pedido) {
+        Intent intent = new Intent(activity, PedidoActivoActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        activity.startActivity(intent);
     }
 
     @Override
@@ -173,44 +177,40 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             convertView = inflater.inflate(R.layout.pendidos_item,parent,false);
 
             TextView viaje = (TextView)convertView.findViewById(R.id.pedido_viaje);
-            try{
-                String origen  = pedidos.get(i).getParseObject("CiudadOrigen").fetchIfNeeded().getString("Nombre");
-                String destino  = pedidos.get(i).getParseObject("CiudadDestino").fetchIfNeeded().getString("Nombre");
-                viaje.setText(origen + " - " + destino);
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
+            String origen = pedidos.get(i).getString("ciudadOrigen").substring(0, 1).toUpperCase() + pedidos.get(i).getString("ciudadOrigen").substring(1).toLowerCase();
+
+            String destino = pedidos.get(i).getString("ciudadDestino").substring(0, 1).toUpperCase() + pedidos.get(i).getString("ciudadDestino").substring(1).toLowerCase();
+            viaje.setText(origen + " - " + destino);
+
             TextView cantidad = (TextView)convertView.findViewById(R.id.pedido_cantidad);
-            cantidad.setText("Peso desde:" + String.valueOf(pedidos.get(i).getNumber("PesoDesde")) + " hasta " + String.valueOf(pedidos.get(i).getNumber("PesoHasta")) + " Tn");
+            cantidad.setText(utils.formatPeso(pedidos.get(i).getString("peso")));
 
             NumberFormat formatter = new DecimalFormat("#0.00");
             TextView precio = (TextView)convertView.findViewById(R.id.pedido_valor);
-            precio.setText("$" + formatter.format(pedidos.get(i).getNumber("Valor")));
-            TextView carga = (TextView)convertView.findViewById(R.id.pedido_carga);
-            carga.setText("Carga: " + utils.formatDate(pedidos.get(i).getDate("HoraCarga")));
-            TextView entrega = (TextView)convertView.findViewById(R.id.pedido_entrega);
-            entrega.setText("Entrega: " + utils.formatDate(pedidos.get(i).getDate("HoraEntrega")));
-            TextView refrigeracion = (TextView)convertView.findViewById(R.id.pedido_refrigeracion);
-            if (pedidos.get(i).getString("TipoTransporte").equalsIgnoreCase("furgon")) {
-                if (pedidos.get(i).getBoolean("CajaRefrigerada")){
-                    refrigeracion.setText("Refrigeracion: Si");
-                }else{
-                    refrigeracion.setText("Refrigeracion: No");
-                }
-            }else{
-                refrigeracion.setVisibility(View.GONE);
-            }
-            TextView comision = (TextView)convertView.findViewById(R.id.pedido_comision);
-            comision.setText("$" + formatter.format(pedidos.get(i).getNumber("Comision")));
+            if (pedidos.get(i).getBoolean("donacion")){
+                convertView.findViewById(R.id.pedido_decorator).setBackground(getResources().getDrawable(R.drawable.donacion_background));
+                precio.setText("DONACION");
 
+                convertView.findViewById(R.id.pedido_comision).setVisibility(View.GONE);
+                convertView.findViewById(R.id.pedido_comision_text).setVisibility(View.GONE);
+            }else{
+                convertView.findViewById(R.id.pedido_decorator).setBackgroundColor(getResources().getColor(R.color.red));
+                precio.setText("$" + formatter.format(pedidos.get(i).getNumber("valor")));
+
+                TextView comision = (TextView)convertView.findViewById(R.id.pedido_comision);
+                comision.setText("$" + formatter.format(pedidos.get(i).getNumber("comision")));
+            }
+
+            TextView carga = (TextView)convertView.findViewById(R.id.pedido_carga);
+            carga.setText("Carga: " + utils.formatDate(pedidos.get(i).getDate("horaCarga")));
+            TextView entrega = (TextView)convertView.findViewById(R.id.pedido_entrega);
+            entrega.setText("Entrega: " + utils.formatDate(pedidos.get(i).getDate("horaEntrega")));
 
             final LinearLayout header = (LinearLayout)convertView.findViewById(R.id.pedido_header);
             header.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     LinearLayout detail = (LinearLayout)((FrameLayout)header.getParent()).findViewById(R.id.pedido_detail);
-                    LinearLayout separator = (LinearLayout)((FrameLayout)header.getParent()).findViewById(R.id.pedido_separator);
-
                     if (detail.getVisibility() == View.GONE) {
                         detail.setVisibility(View.VISIBLE);
                         Animation animation = AnimationUtils.loadAnimation(activity, R.anim.expand);
@@ -218,10 +218,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                         detail.setAnimation(animation);
                         detail.animate();
                         animation.start();
-                        separator.setVisibility(View.VISIBLE);
                     } else {
                         detail.setVisibility(View.GONE);
-                        separator.setVisibility(View.GONE);
                     }
                 }
             });
@@ -231,13 +229,16 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             tomar.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    viewModel.tomarPedido(((ParseObject) view.getTag()).getObjectId().toString());
+                    viewModel.tomarPedido((ParseObject) view.getTag());
                 }
             });
-            if (viewModel.getTransportista().getNumber("Saldo").doubleValue() < pedidos.get(i).getNumber("Comision").doubleValue()){
+            Number saldo = viewModel.getTransportista().getNumber("saldo");
+            if (saldo == null) {
+                saldo = 0;
+            }
+            if (pedidos.get(i).getBoolean("donacion") == false && saldo.doubleValue() < pedidos.get(i).getNumber("comision").doubleValue()){
                 tomar.setVisibility(View.GONE);
             }
-
             return convertView;
         }
 

@@ -5,7 +5,6 @@ import android.app.Service;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -16,11 +15,9 @@ import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
 
+import com.easyruta.easyruta.EasyRutaApplication;
 import com.easyruta.easyruta.R;
-import com.parse.GetCallback;
-import com.parse.ParseException;
 import com.parse.ParseObject;
-import com.parse.ParseQuery;
 
 import java.io.IOException;
 import java.util.List;
@@ -35,6 +32,8 @@ import java.util.Locale;
  */
 public class GPSTracker extends Service implements LocationListener {
 
+    private ParseObject pedido;
+    private PubnubService pubnubService;
 
     // Get Class Name
     private static String TAG = GPSTracker.class.getName();
@@ -58,10 +57,10 @@ public class GPSTracker extends Service implements LocationListener {
     int geocoderMaxResults = 1;
 
     // The minimum distance to change updates in meters
-    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 100; // 100 meters
+    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 250; // 100 meters
 
     // The minimum time between updates in milliseconds
-    private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 5; // 5 minute
+    private static final long MIN_TIME_BW_UPDATES = 1000 * 30 * 1; // 30 segundos
 
     // Declaring a Location Manager
     protected LocationManager locationManager;
@@ -69,9 +68,11 @@ public class GPSTracker extends Service implements LocationListener {
     // Store LocationManager.GPS_PROVIDER or LocationManager.NETWORK_PROVIDER information
     private String provider_info;
 
-    public GPSTracker(Context context) {
+    public GPSTracker(Context context, ParseObject pedido) {
         Log.d("TEST DANIEL","Create new tracker");
+        this.pedido = pedido;
         this.mContext = context;
+        this.pubnubService = ((EasyRutaApplication)context.getApplicationContext()).getPubnubService();
         getLocation();
     }
 
@@ -92,54 +93,37 @@ public class GPSTracker extends Service implements LocationListener {
             // Try to get location if you GPS Service is enabled
             if (isGPSEnabled) {
                 this.isGPSTrackingEnabled = true;
-
-                Log.d(TAG, "Application use GPS Service");
-
-                /*
-                 * This provider determines location using
-                 * satellites. Depending on conditions, this provider may take a while to return
-                 * a location fix.
-                 */
-
                 provider_info = LocationManager.GPS_PROVIDER;
-
-            } else if (isNetworkEnabled) { // Try to get location if you Network Service is enabled
-                this.isGPSTrackingEnabled = true;
-
-                Log.d(TAG, "Application use Network State to get GPS coordinates");
-
-                /*
-                 * This provider determines location based on
-                 * availability of cell tower and WiFi access points. Results are retrieved
-                 * by means of a network lookup.
-                 */
-                provider_info = LocationManager.NETWORK_PROVIDER;
-
-            }
-
-            // Application can use GPS or Network Provider
-            if (!provider_info.isEmpty()) {
-                try {
-                    locationManager.requestLocationUpdates(
-                            provider_info,
-                            MIN_TIME_BW_UPDATES,
-                            MIN_DISTANCE_CHANGE_FOR_UPDATES,
-                            this
-                    );
-
-                    if (locationManager != null) {
-                        location = locationManager.getLastKnownLocation(provider_info);
-                        updateGPSCoordinates();
-                    }
-                }catch (SecurityException e){
-                    Log.e("ERROR","Security exception " + e.getMessage());
+                if (provider_info != null){
+                    getLaskKnoenLocation();
                 }
             }
+
+            if (location == null && isNetworkEnabled) { // Try to get location if you Network Service is enabled
+                this.isGPSTrackingEnabled = true;
+                provider_info = LocationManager.NETWORK_PROVIDER;
+                if (provider_info != null){
+                    getLaskKnoenLocation();
+                }
+            }
+
+            updateGPSCoordinates();
         }
         catch (Exception e)
         {
             //e.printStackTrace();
             Log.e(TAG, "Impossible to connect to LocationManager", e);
+        }
+    }
+
+    private void getLaskKnoenLocation() {
+        try {
+            locationManager.requestLocationUpdates(provider_info, MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
+            if (locationManager != null) {
+                location = locationManager.getLastKnownLocation(provider_info);
+            }
+        }catch (SecurityException e){
+            Log.e("ERROR","Security exception " + e.getMessage());
         }
     }
 
@@ -331,29 +315,9 @@ public class GPSTracker extends Service implements LocationListener {
 
     @Override
     public void onLocationChanged(final Location location) {
-        Log.d("TEST DANIEL","new location:" + location.getLatitude() + " - " + location.getLongitude());
-
-        SharedPreferences prefs = mContext.getSharedPreferences("easyruta", MODE_PRIVATE);
-        final String id = prefs.getString("pedido", "");
-
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
-        query.whereEqualTo("objectId", id);
-        query.getFirstInBackground(new GetCallback<ParseObject>() {
-            @Override
-            public void done(ParseObject object, ParseException e) {
-                if (e == null && object != null) {
-                    object.add("Locations",String.valueOf(location.getLatitude()) + ":" + String.valueOf(location.getLongitude()));
-                    object.saveInBackground();
-                } else {
-                    Log.e("ERROR", "Could not get pedido");
-                    if (e != null) {
-                        Log.e("ERROR", e.getMessage());
-                    } else {
-                        Log.e("ERROR", "result is null for id:" + id);
-                    }
-                }
-            }
-        });
+        Log.d("TEST DANIEL", "new location:" + location.getLatitude() + " - " + location.getLongitude());
+        this.pedido.add("locations", String.valueOf(location.getLatitude()) + "," + String.valueOf(location.getLongitude()));
+        this.pedido.saveInBackground();
     }
 
     @Override

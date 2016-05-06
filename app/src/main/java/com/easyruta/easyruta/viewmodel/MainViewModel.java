@@ -1,7 +1,5 @@
 package com.easyruta.easyruta.viewmodel;
 
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -9,8 +7,6 @@ import com.easyruta.easyruta.EasyRutaApplication;
 import com.easyruta.easyruta.utils.DataService;
 import com.easyruta.easyruta.utils.PubnubService;
 import com.easyruta.easyruta.viewcontroller.MainActivity;
-import com.easyruta.easyruta.viewcontroller.PedidoActivoActivity;
-import com.easyruta.easyruta.viewcontroller.PedidoPendienteActivity;
 import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.ParseException;
@@ -25,7 +21,6 @@ import com.pubnub.api.PubnubException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -84,17 +79,16 @@ public class MainViewModel {
         });
     }
 
-    public void tomarPedido(final String id) {
-        dataService.tomarPedido(id, transportista, new SaveCallback() {
+    public void tomarPedido(final ParseObject pedido) {
+        dataService.tomarPedido(pedido.getObjectId(), transportista, new SaveCallback() {
             @Override
             public void done(ParseException e) {
                 if (e == null) {
-                    application.getPubnubService().getPubnub().publish(pubnubService.PEDIDO_TOMADO, id, new Callback() {
-                    });
-
-                    moveToPedidoPendiente(id);
+                    application.getPubnubService().getPubnub().publish(pubnubService.PEDIDO_ASIGNADO, pedido.getObjectId(), new Callback() {});
+                    updatePedido(pedido);
                 } else {
-                    Toast toast = Toast.makeText(activity.getBaseContext(), transportista.getObjectId().toString(), Toast.LENGTH_LONG);
+                    Log.e("ERROR:",e.getMessage());
+                    Toast toast = Toast.makeText(activity.getBaseContext(), "Ooops!!! Estamos teniendo problemas con nuestros servidores, por favor intente mas tarde o contacte a soporte.", Toast.LENGTH_LONG);
                     toast.show();
                 }
             }
@@ -106,6 +100,15 @@ public class MainViewModel {
         dataService.getPedido(id, callback);
     }
 
+    private void updatePedido(ParseObject pedido){
+        dataService.setPedido(pedido);
+
+        pubnubService.getPubnub().unsubscribe(pubnubService.PEDIDO_CREADO);
+        pubnubService.getPubnub().unsubscribeAll();
+
+        activity.moveToPedidoActivo(pedido);
+    }
+
     public void pubNubSuscriptions(){
         Pubnub pubnub = pubnubService.getPubnub();
 
@@ -114,7 +117,7 @@ public class MainViewModel {
             jso.put("type","transportista");
             jso.put("email",dataService.getUser().getEmail());
             jso.put("name", dataService.getTransportista().get("Nombre"));
-            pubnub.setState(pubnubService.NEW_PEDIDOS, dataService.getUser().getObjectId(), jso, new Callback() {
+            pubnub.setState(pubnubService.PEDIDO_CREADO, dataService.getUser().getObjectId(), jso, new Callback() {
                 public void successCallback(String channel, Object response) {
                 }
 
@@ -127,26 +130,8 @@ public class MainViewModel {
 
         try {
             if (isTransportistaIndependiente) {
-                Log.d("TEST DANIEL","subribing");
-                pubnubService.getPubnub().subscribe(pubnubService.NEW_PEDIDOS, new Callback() {
-                    public void successCallback(String channel, Object message) {
-                        getPedidosPendientes();
-                    }
-
-                    public void errorCallback(String channel, PubnubError error) {
-                        Log.e("ERROR", error.getErrorString());
-                    }
-                });
-                pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_RECHAZADO, new Callback() {
-                    public void successCallback(String channel, Object message) {
-                        getPedidosPendientes();
-                    }
-
-                    public void errorCallback(String channel, PubnubError error) {
-                        Log.e("ERROR", error.getErrorString());
-                    }
-                });
-                pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_RECHAZADO_PROVEEDOR, new Callback() {
+                Log.d("TEST DANIEL", "subribing");
+                pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_CREADO, new Callback() {
                     public void successCallback(String channel, Object message) {
                         getPedidosPendientes();
                     }
@@ -156,34 +141,7 @@ public class MainViewModel {
                     }
                 });
                 pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_CANCELADO, new Callback() {
-                    public void successCallback(String channel, Object message) {
-                        getPedidosPendientes();
-                    }
-
-                    public void errorCallback(String channel, PubnubError error) {
-                        Log.e("ERROR", error.getErrorString());
-                    }
-                });
-                pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_CANCELADO_TRANSPORTISTA, new Callback() {
-                    public void successCallback(String channel, Object message) {
-                        getPedidosPendientes();
-                    }
-
-                    public void errorCallback(String channel, PubnubError error) {
-                        Log.e("ERROR", error.getErrorString());
-                    }
-                });
-                pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_CANCELADO_PROVOEEDOR, new Callback() {
-                    public void successCallback(String channel, Object message) {
-                        getPedidosPendientes();
-                    }
-
-                    public void errorCallback(String channel, PubnubError error) {
-                        Log.e("ERROR", error.getErrorString());
-                    }
-                });
-                pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_TIMEOUT, new Callback() {
-                    public void successCallback(String channel, Object message) {
+                     public void successCallback(String channel, Object message) {
                         getPedidosPendientes();
                     }
 
@@ -193,7 +151,7 @@ public class MainViewModel {
                 });
             }
 
-            pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_TOMADO, new Callback() {
+            pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_ASIGNADO, new Callback() {
                 public void successCallback(String channel, Object message) {
                     if (isTransportistaIndependiente){
                         getPedidosPendientes();
@@ -203,9 +161,10 @@ public class MainViewModel {
                                 @Override
                                 public void done(ParseObject object, ParseException e) {
                                     if (e == null) {
-                                        if (object.getParseObject("Proveedor").getObjectId().toString().equalsIgnoreCase(proveedor.getObjectId().toString())
-                                                && object.getParseObject("Transportista").getObjectId().toString().equalsIgnoreCase(transportista.getObjectId())){
-                                            moveToPedidoPendiente(object.getObjectId().toString());
+
+                                        if (object.getParseObject("transportista") != null && object.getParseObject("transportista").getObjectId().toString().equalsIgnoreCase(proveedor.getObjectId().toString())
+                                                && object.getParseObject("chofer") != null && object.getParseObject("chofer").getObjectId().toString().equalsIgnoreCase(transportista.getObjectId())){
+                                            updatePedido(object);
                                         }
                                     } else {
                                         Log.e("ERROR", e.getMessage());
@@ -224,32 +183,8 @@ public class MainViewModel {
             });
 
             if (!isTransportistaIndependiente){
-                pubnubService.getPubnub().subscribe(pubnubService.PEDIDO_CONFIRMADO_PROVEEDOR, new Callback() {
-                    public void successCallback(String channel, Object message) {
-                        try {
-                            getPedido(((JSONObject) message).getString("id"), new GetCallback<ParseObject>() {
-                                @Override
-                                public void done(ParseObject object, ParseException e) {
-                                    if (e == null) {
-                                        if (object.getParseObject("Proveedor").getObjectId().toString().equalsIgnoreCase(proveedor.getObjectId().toString())
-                                                && object.getParseObject("Transportista").getObjectId().toString().equalsIgnoreCase(transportista.getObjectId())){
-                                            moveToPedidoActivo(object.getObjectId().toString());
-                                        }
-                                    } else {
-                                        Log.e("ERROR", e.getMessage());
-                                    }
-                                }
-                            });
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    public void errorCallback(String channel, PubnubError error) {
-                        Log.e("ERROR", error.getErrorString());
-                    }
-                });
-
+                //TODO Tomar en cuenta cuando se implemente despachador
+                /*
                 pubnubService.getPubnub().subscribe(pubnubService.TRANSPORTISTA_HABILITADO, new Callback() {
                     public void successCallback(String channel, Object message) {
                         refreshTransportista();
@@ -259,6 +194,7 @@ public class MainViewModel {
                         Log.e("ERROR", error.getErrorString());
                     }
                 });
+                */
             }
 
 
@@ -268,34 +204,8 @@ public class MainViewModel {
 
     }
 
-    private void moveToPedidoPendiente(String id){
-        SharedPreferences.Editor prefs = activity.getSharedPreferences("easyruta", activity.MODE_PRIVATE).edit();
-        prefs.putString("pedido", id);
-        prefs.putString("estado", dataService.PENDIENTE_CONFIRMACION);
-        prefs.commit();
-
-        pubnubService.getPubnub().unsubscribe(pubnubService.NEW_PEDIDOS);
-        pubnubService.getPubnub().unsubscribeAll();
-
-        Intent intent = new Intent(activity, PedidoPendienteActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        activity.startActivity(intent);
-    }
-
-    private void moveToPedidoActivo(String id){
-        SharedPreferences.Editor prefs = activity.getSharedPreferences("easyruta", activity.MODE_PRIVATE).edit();
-        prefs.putString("pedido", id);
-        prefs.putString("estado", dataService.ACTIVO);
-        prefs.commit();
-
-        pubnubService.getPubnub().unsubscribe(pubnubService.NEW_PEDIDOS);
-        pubnubService.getPubnub().unsubscribeAll();
-
-        Intent intent = new Intent(activity, PedidoActivoActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        activity.startActivity(intent);
-    }
-
+    //TODO tomar en cuenta cuando se tenga despachador
+    /*
     public void MarcarDisponible(){
         transportista.put("Estado", "disponible");
         transportista.put("HoraDisponible", new Date());
@@ -317,9 +227,9 @@ public class MainViewModel {
             }
         });
     }
-
+    */
     public void refreshTransportista(){
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("Transportista");
+        ParseQuery<ParseObject> query = ParseQuery.getQuery("Chofer");
         query.whereEqualTo("objectId",transportista.getObjectId());
         query.getFirstInBackground(new GetCallback<ParseObject>() {
             @Override

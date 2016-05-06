@@ -2,15 +2,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/grey"
-    android:paddingTop="5dp"
-    android:paddingBottom="5dp"
-    android:paddingLeft="10dp"
-    android:paddingRight="10dp">
+    android:background="@color/white_smoke">
     <FrameLayout
+        android:layout_marginTop="3dp"
+        android:layout_marginBottom="2dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/item_background">
+        android:background="@color/white"
+        android:layout_height="wrap_content">
         <LinearLayout
             android:id="@+id/pedido_detail"
             android:layout_marginTop="91dp"
@@ -20,6 +18,7 @@
             android:paddingBottom="10dp"
             android:paddingLeft="20dp"
             android:paddingRight="0dp"
+            android:background="@color/white"
             android:orientation="horizontal"
             android:visibility="gone">
             <LinearLayout
@@ -28,33 +27,28 @@
                 android:orientation="vertical"
                 android:layout_weight="1">
                 <TextView
-                    android:id="@+id/pedido_carga"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textSize="7pt"
-                    android:textColor="@color/black"
-                    android:text="Carga: Hoy a las 5:00pm"/>
-                <TextView
                     android:id="@+id/pedido_entrega"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="7pt"
-                    android:textColor="@color/black"
+                    android:textColor="@color/grey"
                     android:text="Entrega: Maniana a las 6:00am"/>
                 <TextView
-                    android:id="@+id/pedido_extra"
+                    android:id="@+id/pedido_producto"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="7pt"
-                    android:textColor="@color/black"
-                    android:text="Cubicaje: 20 m3"/>
+                    android:textColor="@color/grey"
+                    android:text="Ceramica"/>
                 <TextView
-                    android:id="@+id/pedido_refrigeracion"
+                    android:id="@+id/pedido_cantidad"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="4"
+                    android:gravity="top|left"
+                    android:textColor="@color/grey"
                     android:textSize="7pt"
-                    android:textColor="@color/black"
-                    android:text="Refrigerado: Si"/>
+                    android:text="Ceramica"/>
             </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
@@ -82,15 +76,18 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:textSize="8pt"
-                    android:textColor="@color/orange"
-                    android:text="$12.50"/>
+                    android:textColor="@color/yellow"
+                    android:text="$12.50"
+                    android:visibility="visible"/>
                 <TextView
+                    android:id="@+id/pedido_comision_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:textSize="5pt"
                     android:textColor="@color/grey"
-                    android:text="Comision"/>
+                    android:text="Comision"
+                    android:visibility="visible"/>
             </LinearLayout>
         </LinearLayout>
         <LinearLayout
@@ -98,12 +95,15 @@
             android:layout_width="match_parent"
             android:layout_height="90dp"
             android:background="@drawable/item_background"
-            android:paddingTop="5dp"
-            android:paddingBottom="5dp"
-            android:paddingLeft="15dp"
-            android:paddingRight="15dp"
             android:orientation="horizontal">
             <LinearLayout
+                android:id="@+id/pedido_decorator"
+                android:layout_width="10dp"
+                android:layout_height="match_parent"
+                android:background="@color/red"
+                android:orientation="horizontal"/>
+            <LinearLayout
+                android:layout_marginLeft="10dp"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
@@ -118,16 +118,16 @@
                     android:text="Cuenca - Guayaquil"
                     android:gravity="center|left"/>
                 <TextView
-                    android:id="@+id/pedido_cantidad"
+                    android:id="@+id/pedido_carga"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_weight="4"
-                    android:gravity="top|left"
-                    android:textColor="@color/grey"
+                    android:layout_weight="3"
                     android:textSize="7pt"
-                    android:text="Ceramica"/>
+                    android:textColor="@color/grey"
+                    android:text="Carga: Hoy a las 5:00pm"/>
             </LinearLayout>
             <LinearLayout
+                android:layout_marginRight="10dp"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="2">
@@ -135,19 +135,11 @@
                     android:id="@+id/pedido_valor"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:textSize="10pt"
-                    android:textColor="@color/orange"
+                    android:textSize="9pt"
+                    android:textColor="@color/red"
                     android:text="$350.00"
                     android:gravity="center|right"/>
             </LinearLayout>
         </LinearLayout>
-        <LinearLayout
-            android:id="@+id/pedido_separator"
-            android:orientation="vertical"
-            android:layout_width="match_parent"
-            android:layout_marginTop="90dp"
-            android:layout_height="1dp"
-            android:visibility="gone"
-            android:background="@color/grey"/>
     </FrameLayout>
 </LinearLayout>

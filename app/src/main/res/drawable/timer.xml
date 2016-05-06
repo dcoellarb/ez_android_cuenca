@@ -32,7 +32,7 @@
                 <gradient
                     android:centerColor="@color/yellow"
                     android:endColor="@color/yellow"
-                    android:startColor="@color/orange"
+                    android:startColor="@color/yellow"
                     android:type="sweep" />
             </shape>
         </rotate>

@@ -21,7 +21,7 @@ public class LaunchActivity extends Activity {
     protected void onStart(){
         super.onStart();
 
-        ((EasyRutaApplication)getApplication()).getRedirectService().redirectByUser(((EasyRutaApplication)getApplication()),this);
+        ((EasyRutaApplication)getApplication()).getRedirectService().redirect(((EasyRutaApplication)getApplication()),this);
     }
 
 }

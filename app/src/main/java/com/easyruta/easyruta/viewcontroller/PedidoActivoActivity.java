@@ -2,15 +2,13 @@ package com.easyruta.easyruta.viewcontroller;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -23,7 +21,6 @@ import com.easyruta.easyruta.viewmodel.PedidoActivoViewModel;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.pubnub.api.Pubnub;
-import com.squareup.picasso.Picasso;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -37,8 +34,8 @@ public class PedidoActivoActivity extends Activity {
     private Activity activity;
     private PedidoActivoViewModel viewModel;
     private ImageView navImageView;
-    private LinearLayout iniciar;
-    private LinearLayout finalizar;
+    private Button iniciar;
+    private Button finalizar;
     private LinearLayout cancelar;
     private String contactoNumber = "";
 
@@ -53,11 +50,6 @@ public class PedidoActivoActivity extends Activity {
     }
 
     private void loadPedido() {
-        SharedPreferences prefs = this.getSharedPreferences("easyruta", MODE_PRIVATE);
-        final String id = prefs.getString("pedido", "");
-
-        viewModel.getPedido(id);
-
         ImageView phoneImageView = (ImageView) findViewById(R.id.pedido_call);
         phoneImageView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -92,9 +84,8 @@ public class PedidoActivoActivity extends Activity {
             }
         });
 
-        iniciar = (LinearLayout) findViewById(R.id.pedido_iniciar);
-        finalizar = (LinearLayout) findViewById(R.id.pedido_finalizar);
-        cancelar = (LinearLayout)findViewById(R.id.pedido_cancelar);
+        iniciar = (Button) findViewById(R.id.pedido_iniciar);
+        finalizar = (Button) findViewById(R.id.pedido_finalizar);
         iniciar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -107,118 +98,74 @@ public class PedidoActivoActivity extends Activity {
                 viewModel.finalizarPedido();
             }
         });
-        if (viewModel.isTransportistaIndependiente) {
-            cancelar.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            switch (which) {
-                                case DialogInterface.BUTTON_POSITIVE:
-                                    cancelPedido(true);
-                                    break;
-
-                                case DialogInterface.BUTTON_NEGATIVE:
-                                    break;
-                            }
-                        }
-                    };
-
-                    AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-                    builder.setMessage(R.string.confirmation_cancelar_pedido)
-                            .setPositiveButton("Si", dialogClickListener)
-                            .setNegativeButton("No", dialogClickListener).show();
-                }
-            });
-        }else{
-            cancelar.setVisibility(View.GONE);
-        }
-
     }
 
     public void setPedido(ParseObject pedido){
         ImageView empresaImage = (ImageView)findViewById(R.id.pedido_company_image);
         TextView contacto = (TextView)findViewById(R.id.pedido_contacto);
         try{
-            ParseObject empresa = pedido.getParseObject("empresa").fetchIfNeeded();
-            contacto.setText(empresa.getString("PersonaContacto"));
+            ParseObject empresa = pedido.getParseObject("proveedorCarga").fetchIfNeeded();
+            contacto.setText(empresa.getString("contacto"));
 
+            /*
             Picasso.with(this.getBaseContext())
-                    .load(empresa.getString("ImageUrl"))
+                    .load(empresa.getString("imageUrl"))
                     .placeholder(R.drawable.account)
                     .into(empresaImage);
+            */
 
-            contactoNumber = empresa.getString("Telefono");
+            contactoNumber = empresa.getString("telefono");
         } catch (ParseException e) {
             e.printStackTrace();
         }
 
         TextView viaje = (TextView)findViewById(R.id.pedido_viaje);
-        try{
-            String origen  = pedido.getParseObject("CiudadOrigen").fetchIfNeeded().getString("Nombre");
-            String destino  = pedido.getParseObject("CiudadDestino").fetchIfNeeded().getString("Nombre");
-            viaje.setText(origen + " - " + destino);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+        String origen  = pedido.getString("ciudadOrigen");
+        String destino  = pedido.getString("ciudadDestino");
+        viaje.setText(origen + " - " + destino);
 
         TextView direccion_origen = (TextView)findViewById(R.id.pedido_direccion_origen);
-        direccion_origen.setText(pedido.getString("DireccionOrigen"));
+        direccion_origen.setText(pedido.getString("direccionOrigen"));
         TextView direccion_destino = (TextView)findViewById(R.id.pedido_direccion_destino);
-        direccion_destino.setText(pedido.getString("DireccionDestino"));
+        direccion_destino.setText(pedido.getString("direccionDestino"));
 
         TextView producto = (TextView)findViewById(R.id.pedido_producto);
-        producto.setText(pedido.getString("Producto"));
+        producto.setText(pedido.getString("producto"));
 
+        findViewById(R.id.pedido_valor).setVisibility(View.GONE);
+        findViewById(R.id.pedido_comision).setVisibility(View.GONE);
+        findViewById(R.id.pedido_comision_text).setVisibility(View.GONE);
         NumberFormat formatter = new DecimalFormat("#0.00");
-
         TextView precio = (TextView)findViewById(R.id.pedido_valor);
-        precio.setText("$" + formatter.format(pedido.getNumber("Valor")));
+        if (pedido.getBoolean("donacion")){
+            precio.setVisibility(View.VISIBLE);
+            precio.setText("DONACION");
+        } else if(pedido.getParseObject("transportista") == null) {
+            precio.setVisibility(View.VISIBLE);
+            precio.setText("$" + formatter.format(pedido.getNumber("valor")));
+            TextView comision = (TextView)findViewById(R.id.pedido_comision);
+            comision.setVisibility(View.VISIBLE);
+            comision.setText("$" + formatter.format(pedido.getNumber("comision")));
+            findViewById(R.id.pedido_comision_text).setVisibility(View.VISIBLE);
+        }
+
 
         TextView peso = (TextView)findViewById(R.id.pedido_peso);
-        peso.setText("Peso desde:" + String.valueOf(pedido.getNumber("PesoDesde")) + " hasta " + String.valueOf(pedido.getNumber("PesoHasta")) + " Tn");
+        peso.setText(pedido.getString("peso"));
 
         TextView carga = (TextView)findViewById(R.id.pedido_carga);
-        carga.setText("Carga: " + utils.formatDate(pedido.getDate("HoraCarga")));
+        carga.setText("Carga: " + utils.formatDate(pedido.getDate("horaCarga")));
         TextView entrega = (TextView)findViewById(R.id.pedido_entrega);
-        entrega.setText("Entrega: " + utils.formatDate(pedido.getDate("HoraEntrega")));
-
-        TextView refrigeracion = (TextView)findViewById(R.id.pedido_refrigeracion);
-        if (pedido.getString("TipoTransporte").equalsIgnoreCase("furgon")) {
-            if (pedido.getBoolean("CajaRefrigerada")){
-                refrigeracion.setText("Refrigeracion: Si");
-            }else{
-                refrigeracion.setText("Refrigeracion: No");
-            }
-        }else{
-            refrigeracion.setVisibility(View.GONE);
-        }
-        TextView comision = (TextView)findViewById(R.id.pedido_comision);
-        comision.setText("$" + formatter.format(pedido.getNumber("Comision")));
-
+        entrega.setText("Entrega: " + utils.formatDate(pedido.getDate("horaEntrega")));
     }
 
     public void toggleEstado(){
-        cancelar.setVisibility(View.GONE);
         iniciar.setVisibility(View.GONE);
         finalizar.setVisibility(View.VISIBLE);
         navImageView.setVisibility(View.VISIBLE);
     }
 
-    public void cancelPedido(final Boolean broadcast){
-        SharedPreferences prefs = this.getSharedPreferences("easyruta", MODE_PRIVATE);
-        final String id = prefs.getString("pedido", "");
-
-        viewModel.cancelarPedido();
-    }
-
     public void closeActivity(){
-        SharedPreferences.Editor prefs = activity.getSharedPreferences("easyruta", MODE_PRIVATE).edit();
-        prefs.remove("pedido");
-        prefs.remove("estado");
-        prefs.commit();
-
         Pubnub pubnub = ((EasyRutaApplication)getApplication()).getPubnubService().getPubnub();
         pubnub.unsubscribeAll();
 

@@ -2,8 +2,8 @@ package com.easyruta.easyruta.utils;
 
 import android.util.Log;
 
-import com.easyruta.easyruta.Constants;
 import com.easyruta.easyruta.EasyRutaApplication;
+import com.easyruta.easyruta.utils.dataService.DataServiceFilter;
 import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.LogInCallback;
@@ -17,6 +17,7 @@ import com.parse.SaveCallback;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -28,19 +29,17 @@ public class DataService {
 
     //Statics
     public static String PENDIENTE = "Pendiente";
-    public static String PENDIENTE_CONFIRMACION = "PendienteConfirmacion";
-    public static String PENDIENTE_CONFIRMACION_PROVEEDOR = "PendienteConfirmacionProveedor";
     public static String ACTIVO = "Activo";
     public static String EN_CURSO = "EnCurso";
     public static String FINALIZADO = "Finalizado";
     public static String CANCELADO = "Cancelado";
-    public static String CANCELADO_CLIENTE = "CanceladoCliente";
 
     //Variables
     private DataService dataService;
     private ParseUser user;
     private ParseObject transportista;
     private ParseObject proveedor;
+    private ParseObject pedido;
 
     public DataService(EasyRutaApplication application){
 
@@ -48,10 +47,64 @@ public class DataService {
 
         Parse.setLogLevel(Log.VERBOSE);
         Parse.enableLocalDatastore(application);
-        Parse.initialize(application, Constants.PARSE_APPLICATION_ID, Constants.PARSE_CLIENT_KEY);
-        //ParseInstallation.getCurrentInstallation().saveInBackground();
-
+        Parse.initialize(new Parse.Configuration.Builder(application)
+                .applicationId(com.easyruta.easyruta.Constants.PARSE_APPLICATION_ID)
+                .clientKey(null)
+                .server(com.easyruta.easyruta.Constants.PARSE_SERVER_URL)
+                .build()
+        );
     }
+
+    private ParseQuery<ParseObject> buildFilter(ParseQuery<ParseObject> query, DataServiceFilter filter) {
+        switch (filter.getOperator()){
+            case "=":
+                query.whereEqualTo(filter.getField(), filter.getValue());
+                break;
+            case ">":
+                query.whereGreaterThan(filter.getField(), filter.getValue());
+                break;
+            case ">=":
+                query.whereGreaterThanOrEqualTo(filter.getField(), filter.getValue());
+                break;
+            case "<":
+                query.whereLessThan(filter.getField(), filter.getValue());
+                break;
+            case "<=":
+                query.whereLessThanOrEqualTo(filter.getField(), filter.getValue());
+                break;
+            case "!=":
+                if (filter.getValue() == null){
+                    query.whereExists(filter.getField());
+                } else {
+                    query.whereNotEqualTo(filter.getField(), filter.getValue());
+                }
+                break;
+            case "containedIn":
+                query.whereContainedIn(filter.getField(), (Collection<?>) filter.getValue());
+                break;
+            case "contains":
+                query.whereContains(filter.getField(), filter.getValue().toString());
+                break;
+            case "containsAll":
+                query.whereContainsAll(filter.getField(), (Collection<?>) filter.getValue());
+                break;
+            case "startsWith":
+                query.whereStartsWith(filter.getField(), filter.getValue().toString());
+                break;
+        }
+        return query;
+    }
+    /*
+    private ParseQuery<ParseObject> buildQuery(EasyrutaDataCollections collection, DataServiceQueryParameters params){
+        ParseQuery<ParseObject> query;
+        if (params != null){
+            if (params.getFilters() != null){
+
+            }
+        }
+        return query;
+    }
+    */
 
     //Getter and Setters
     public ParseUser getUser() {
@@ -59,6 +112,9 @@ public class DataService {
             user = ParseUser.getCurrentUser();
         }
         return user;
+    }
+    public void setUser(ParseUser user) {
+        this.user = user;
     }
 
     //Getter and Setters
@@ -74,23 +130,28 @@ public class DataService {
     public void setProveedor(ParseObject proveedor) {
         this.proveedor = proveedor;
     }
+    public ParseObject getPedido() {
+        return pedido;
+    }
+    public void setPedido(ParseObject pedido) {
+        this.pedido = pedido;
+    }
 
     //Public Methods
     public void getUserTransportista(GetCallback<ParseObject> callback){
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("Transportista");
-        query.include("proveedor");
+        ParseQuery<ParseObject> query = ParseQuery.getQuery("Chofer");
+        query.include("transportista");
         query.whereEqualTo("user", this.user);
+        String id = this.user.getObjectId();
+        Log.d("TEST",id);
         query.getFirstInBackground(callback);
     }
     public void getTransportistaCurrentPedido(GetCallback<ParseObject> callback){
-        ParseQuery<ParseObject> pendienteQuery = ParseQuery.getQuery("Pedido");
-        pendienteQuery.whereEqualTo("Estado", dataService.PENDIENTE_CONFIRMACION);
         ParseQuery<ParseObject> activoQuery = ParseQuery.getQuery("Pedido");
-        activoQuery.whereEqualTo("Estado", dataService.ACTIVO);
+        activoQuery.whereEqualTo("estado", dataService.ACTIVO);
         ParseQuery<ParseObject> encursoQuery = ParseQuery.getQuery("Pedido");
-        encursoQuery.whereEqualTo("Estado", dataService.EN_CURSO);
+        encursoQuery.whereEqualTo("estado", dataService.EN_CURSO);
         List<ParseQuery<ParseObject>> queries = new ArrayList<>();
-        queries.add(pendienteQuery);
         queries.add(activoQuery);
         queries.add(encursoQuery);
 
@@ -101,98 +162,69 @@ public class DataService {
         ParseUser.logInInBackground(user, password, callback);
     }
     public void getPedidoPendientes(ParseObject transportista,FindCallback<ParseObject> callback){
-        if (transportista.getString("TipoTransporte").equalsIgnoreCase("furgon") || transportista.getString("TipoTransporte").equalsIgnoreCase("plataforma")){
-            //Or for furgon or plataformar
-            ParseQuery<ParseObject> queryTipo = ParseQuery.getQuery("Pedido");
-            queryTipo.whereEqualTo("TipoTransporte", transportista.getString("TipoTransporte"));
-            ParseQuery<ParseObject> queryTipo1 = ParseQuery.getQuery("Pedido");
-            queryTipo1.whereEqualTo("TipoTransporte", "furgon_plataforma");
-
-            //Create list for or
-            List<ParseQuery<ParseObject>> queries = new ArrayList<ParseQuery<ParseObject>>();
-            queries.add(queryTipo);
-            queries.add(queryTipo1);
-
-            //Combine query
-            ParseQuery<ParseObject> query = ParseQuery.or(queries);
-            //Regular query filters
-            query.whereEqualTo("Estado", dataService.PENDIENTE);
-            query.whereNotEqualTo("TransportistasBloqueados", transportista.getObjectId());
-            query.whereNotEqualTo("TransportistasCancelados", transportista.getObjectId());
-            //Run query
-            query.orderByDescending("createdAt");
-            Log.d("TEST","getting or");
-            query.findInBackground(callback);
-        }else{
-            ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
-            //Regular query filters
-            query.whereEqualTo("Estado", dataService.PENDIENTE);
-            //query.whereLessThanOrEqualTo("Comision", transportista.get("Saldo"));
-            query.whereNotEqualTo("TransportistasBloqueados", transportista.getObjectId());
-            query.whereNotEqualTo("TransportistasCancelados", transportista.getObjectId());
-            //Filter type
-            query.whereEqualTo("TipoTransporte", transportista.getString("TipoTransporte"));
-            //Run query
-            query.orderByDescending("createdAt");
-            Log.d("TEST", "getting normal");
-            query.findInBackground(callback);
-        }
+        ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
+        query.whereEqualTo("estado", dataService.PENDIENTE);
+        query.whereEqualTo("tipoCamion", transportista.getString("tipoCamion"));
+        query.orderByDescending("createdAt");
+        query.findInBackground(callback);
     }
-    public void getTransportistaSaldo(ParseObject transportista,GetCallback<ParseObject> callback){
-        ParseQuery query = new ParseQuery("Transportista");
-        query.whereEqualTo("objectId", transportista.getObjectId());
+    public void getTransportistaSaldo(ParseObject chofer,GetCallback<ParseObject> callback){
+        ParseQuery query = new ParseQuery("Chofer");
+        query.whereEqualTo("objectId", chofer.getObjectId());
         query.getFirstInBackground(callback);
     }
 
     public void getPedido(String id, GetCallback<ParseObject> callback){
         ParseQuery<ParseObject> query = ParseQuery.getQuery("Pedido");
         query.whereEqualTo("objectId", id);
-        query.include("empresa");
+        query.include("proveedorCarga");
         query.getFirstInBackground(callback);
     }
-    public void cancelarPedido(final ParseObject pedido, final String estado, final SaveCallback callback){
-
-        if (estado == dataService.PENDIENTE){
-            ParseACL acl = new ParseACL(pedido.getParseObject("empresa").getParseUser("user"));
-            acl.setRoleReadAccess("transportistaIndependiente", true);
-            acl.setRoleWriteAccess("transportistaIndependiente", true);
-            acl.setRoleReadAccess("transportista", true);
-            acl.setRoleWriteAccess("transportista",true);
-            acl.setRoleReadAccess("proveedor", true);
-            acl.setRoleWriteAccess("proveedor",true);
-            pedido.setACL(acl);
-        }
-
-        pedido.put("HoraSeleccion", Calendar.getInstance().getTime());
-        pedido.put("Estado", estado);
-        pedido.put("Transportista", transportista);
-        pedido.saveInBackground(callback);
-
-    }
-    public void tomarPedido(String id,final ParseObject transportista, final SaveCallback callback){
+    public void tomarPedido(String id,final ParseObject chofer, final SaveCallback callback){
         getPedido(id, new GetCallback<ParseObject>() {
             @Override
-            public void done(ParseObject pedido, ParseException e) {
-
-                ParseACL acl = new ParseACL(pedido.getParseObject("empresa").getParseUser("user"));
+            public void done(final ParseObject pedido, ParseException e) {
+                ParseACL acl = new ParseACL(pedido.getParseObject("proveedorCarga").getParseUser("user"));
                 acl.setReadAccess(ParseUser.getCurrentUser(),true);
                 acl.setWriteAccess(ParseUser.getCurrentUser(),true);
                 pedido.setACL(acl);
-                pedido.put("HoraSeleccion", Calendar.getInstance().getTime());
-                pedido.put("Estado", dataService.PENDIENTE_CONFIRMACION);
-                pedido.put("Transportista", transportista);
-                pedido.saveInBackground(callback);
+                pedido.put("horaAsignacion", Calendar.getInstance().getTime());
+                pedido.put("estado", dataService.ACTIVO);
+                pedido.put("chofer", chofer);
+                pedido.saveInBackground(new SaveCallback() {
+                    @Override
+                    public void done(ParseException e) {
+                        ParseObject transportista = dataService.getTransportista();
+                        transportista.put("estado", "EnViaje");
+                        if (pedido.getBoolean("donacion") == false){
+                            Number saldo = transportista.getNumber("saldo");
+                            if (saldo == null) {
+                                saldo = 0;
+                            }
+                            transportista.put("saldo", saldo.doubleValue() - pedido.getNumber("comision").doubleValue());
+                        }
+                        transportista.saveInBackground(callback);
+                    }
+                });
+
             }
         });
     }
     public void iniciarPedido(ParseObject pedido, SaveCallback callback){
-        pedido.put("HoraInicio", new Date());
-        pedido.put("Estado", dataService.EN_CURSO);
+        pedido.put("horaInicio", new Date());
+        pedido.put("estado", dataService.EN_CURSO);
         pedido.saveInBackground(callback);
     }
-    public void finalizarPedido(ParseObject pedido, SaveCallback callback){
-        pedido.put("HoraFinalizacion", new Date());
-        pedido.put("Estado", dataService.FINALIZADO);
-        pedido.saveInBackground(callback);
+    public void finalizarPedido(ParseObject pedido, final SaveCallback callback){
+        pedido.put("horaFinalizacion", new Date());
+        pedido.put("estado", dataService.FINALIZADO);
+        pedido.saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                ParseObject transportista = dataService.getTransportista();
+                transportista.put("estado", "Disponible");
+                transportista.saveInBackground(callback);
+            }
+        });
     }
 }

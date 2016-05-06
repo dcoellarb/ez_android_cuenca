@@ -1,7 +1,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent" tools:context=".MainActivity"
-    android:background="@color/grey"
+    android:background="@color/white_smoke"
     android:orientation="vertical">
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,35 +14,32 @@
             android:background="@color/white"
             android:layout_margin="10dp"
             android:visibility="gone">
-            <ProgressBar
-                android:id="@+id/waiting_bar"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:layout_alignParentTop="true"
-                android:layout_marginTop="80dp"
-                android:layout_centerHorizontal="true"/>
-            <TextView
-                android:layout_marginLeft="20dp"
-                android:layout_marginRight="20dp"
-                android:id="@+id/waiting_message"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Esperando Pedido..."
-                android:layout_centerInParent="true"
-                android:textSize="10pt"
-                android:maxLines="5"
-                android:textAlignment="center"/>
-            <Button
-                android:id="@+id/waiting_button"
-                android:text="Marcar como Disponible"
-                android:textColor="@color/white"
-                android:background="@color/orange"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:layout_alignParentBottom="true"
-                android:layout_marginBottom="50dp"
-                android:layout_centerHorizontal="true"
-                android:visibility="gone"/>
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_marginTop="40dp"
+                    android:layout_marginBottom="40dp"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:src="@drawable/logo" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="30dp"
+                    android:text="Esperando pedido..."/>
+                <TextView
+                    android:layout_marginTop="20dp"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginRight="20dp"
+                    android:gravity="center"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="20dp"
+                    android:text="Tu operador no te ha asignado un pedido aun."/>
+            </LinearLayout>
         </RelativeLayout>
         <LinearLayout
             android:id="@+id/transportista_home"
@@ -50,10 +47,12 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
             <LinearLayout
+                android:id="@+id/saldo_container"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
                 android:background="@color/white"
-                android:gravity="right">
+                android:gravity="right"
+                android:visibility="visible">
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
@@ -71,9 +70,36 @@
                         android:layout_height="match_parent"
                         android:textSize="12pt"
                         android:gravity="center_vertical"
-                        android:textColor="@color/orange"
+                        android:textColor="@color/yellow"
                         android:text="$120.00"/>
                 </LinearLayout>
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/pedidos_placeholder"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_marginTop="40dp"
+                    android:layout_marginBottom="40dp"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:src="@drawable/logo" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="30dp"
+                    android:text="Lista vacia"/>
+                <TextView
+                    android:layout_marginTop="20dp"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginRight="20dp"
+                    android:gravity="center"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="20dp"
+                    android:text="No hay pedidos pendientes al momento."/>
             </LinearLayout>
             <android.support.v4.widget.SwipeRefreshLayout
                 android:id="@+id/swipeToRefresh"

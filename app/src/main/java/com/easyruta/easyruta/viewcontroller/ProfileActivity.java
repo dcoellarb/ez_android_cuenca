@@ -3,35 +3,26 @@ package com.easyruta.easyruta.viewcontroller;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.Switch;
-import android.widget.TextView;
+import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.easyruta.easyruta.EasyRutaApplication;
 import com.easyruta.easyruta.R;
+import com.easyruta.easyruta.utils.DataService;
 import com.parse.LogOutCallback;
 import com.parse.ParseException;
-import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
-import com.squareup.picasso.Picasso;
 
-import java.io.ByteArrayOutputStream;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
+import java.util.Arrays;
 
 /**
  * Created by dcoellar on 10/10/15.
@@ -39,8 +30,9 @@ import java.text.NumberFormat;
 public class ProfileActivity extends AppCompatActivity {
 
     private Activity activity;
-    private ImageView photo;
-    private Bitmap imageBitmap;
+
+    private DataService dataService;
+
     private ParseObject transportista;
     private EditText nombre;
     private EditText ci_ruc;
@@ -50,29 +42,15 @@ public class ProfileActivity extends AppCompatActivity {
     private EditText modelo;
     private EditText anio;
     private EditText color;
-    private EditText cubicaje;
-    private EditText extension;
-    private Switch refrigeracion;
-
-    LinearLayout currentTipo;
-    TextView currentTipoText;
-    ImageView currentTipoImage;
-    String tipo;
+    private Spinner spinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_profile);
-        activity = this;
-
-        photo = (ImageView)findViewById(R.id.profile_photo);
-        photo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                dispatchTakePictureIntent();
-            }
-        });
+        this.activity = this;
+        this.dataService = ((EasyRutaApplication)getApplication()).getDataService();
 
         nombre = (EditText)findViewById(R.id.profile_name);
         ci_ruc = (EditText)findViewById(R.id.profile_ci_ruc);
@@ -84,57 +62,17 @@ public class ProfileActivity extends AppCompatActivity {
         anio = (EditText)findViewById(R.id.profile_year);
         anio.setRawInputType(Configuration.KEYBOARD_QWERTY);
         color = (EditText)findViewById(R.id.profile_color);
-        refrigeracion = (Switch)findViewById(R.id.profile_refrigerado);
-
-        findViewById(R.id.profile_tipo_furgon).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                tipo = "furgon";
-                setTipo(view);
-            }
-        });
-        findViewById(R.id.profile_tipo_plataforma).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                tipo = "plataforma";
-                setTipo(view);
-            }
-        });
-        findViewById(R.id.profile_tipo_cama_baja).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                tipo = "cama baja";
-                setTipo(view);
-            }
-        });
-        findViewById(R.id.profile_tipo_banera).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                tipo = "banera";
-                setTipo(view);
-            }
-        });
-        findViewById(R.id.profile_tipo_tanquero).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                tipo = "tanquero";
-                setTipo(view);
-            }
-        });
-        findViewById(R.id.profile_tipo_ninera).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                tipo = "ninera";
-                setTipo(view);
-            }
-        });
-
         findViewById(R.id.cerrar_session).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 ParseUser.getCurrentUser().logOutInBackground(new LogOutCallback() {
                     @Override
                     public void done(ParseException e) {
+                        dataService.setUser(null);
+                        dataService.setTransportista(null);
+                        dataService.setPedido(null);
+                        dataService.setPedido(null);
+
                         Intent intent = new Intent(activity, LoginActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         activity.startActivity(intent);
@@ -142,127 +80,37 @@ public class ProfileActivity extends AppCompatActivity {
                 });
             }
         });
+        findViewById(R.id.save).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                saveProfile();
+            }
+        });
+        this.spinner = (Spinner) findViewById(R.id.profile_tipoCamion);
 
         loadProfile();
 
     }
 
-    private void setTipo(View view){
-        if (currentTipo != null){
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                currentTipo.setBackground(getDrawable(R.drawable.tipo_background));
-            }else{
-                currentTipo.setBackgroundResource(R.drawable.tipo_background);
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                //currentTipoText.setTextColor(getColor(R.color.white));
-                currentTipoText.setTextColor(getResources().getColor(R.color.white));
-            }else{
-                currentTipoText.setTextColor(getResources().getColor(R.color.white));
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                currentTipoImage.setImageDrawable(getDrawable(getTipoResource(currentTipoText.getText().toString(),true)));
-            }else{
-                currentTipoImage.setImageDrawable(getResources().getDrawable(getTipoResource(currentTipoText.getText().toString(),true)));
-            }
-
-            if (currentTipoText.getText().toString().equalsIgnoreCase("furgon")){
-                findViewById(R.id.profile_furgon_container).setVisibility(View.GONE);
-            }
-        }
-
-        currentTipo = (LinearLayout)view;
-        currentTipoImage = (ImageView)((ViewGroup)view).getChildAt(0);
-        currentTipoText = (TextView)((ViewGroup)view).getChildAt(1);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            currentTipo.setBackground(getDrawable(R.drawable.tipo_background_selected));
-        }else{
-            currentTipo.setBackgroundResource(R.drawable.tipo_background_selected);
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            //currentTipoText.setTextColor(getColor(R.color.orange));
-            currentTipoText.setTextColor(getResources().getColor(R.color.orange));
-        }else{
-            currentTipoText.setTextColor(getResources().getColor(R.color.orange));
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            currentTipoImage.setImageDrawable(getDrawable(getTipoResource(currentTipoText.getText().toString(),false)));
-        }else{
-            currentTipoImage.setImageDrawable(getResources().getDrawable(getTipoResource(currentTipoText.getText().toString(), false)));
-        }
-
-        if (currentTipoText.getText().toString().equalsIgnoreCase("furgon")){
-            findViewById(R.id.profile_furgon_container).setVisibility(View.VISIBLE);
-        }
-    }
-
-    private int getTipoResource(String tipo,boolean white){
-        if (tipo.equalsIgnoreCase("furgon")){
-            if (white){ return R.drawable.tipo_furgon_white; }else{ return R.drawable.tipo_furgon_yellow; }
-        }
-        if (tipo.equalsIgnoreCase("plataforma")){
-            if (white){ return R.drawable.tipo_plataforma_white; }else{ return R.drawable.tipo_plataforma_yellow; }
-        }
-        if (tipo.equalsIgnoreCase("cama baja")){
-            if (white){ return R.drawable.tipo_furgon_white; }else{ return R.drawable.tipo_furgon_yellow; }
-        }
-        if (tipo.equalsIgnoreCase("banera")){
-            if (white){ return R.drawable.tipo_banera_white; }else{ return R.drawable.tipo_banera_yellow; }
-        }
-        if (tipo.equalsIgnoreCase("tanquero")){
-            if (white){ return R.drawable.tipo_tanquero_white; }else{ return R.drawable.tipo_tanquero_yellow; }
-        }
-        if (tipo.equalsIgnoreCase("ninera")){
-            if (white){ return R.drawable.tipo_jaula_white; }else{ return R.drawable.tipo_jaula_yellow; }
-        }
-        return 0;
-    }
-
     private void loadProfile(){
         transportista = ((EasyRutaApplication)getApplication()).getDataService().getTransportista();
-        nombre.setText(transportista.getString("Nombre"));
-        ci_ruc.setText(transportista.getString("Cedula"));
-        telefono.setText(transportista.getString("Telefono"));
-        placa.setText(transportista.getString("Placa"));
-        marca.setText(transportista.getString("Marca"));
-        modelo.setText(transportista.getString("Modelo"));
-        if (transportista.getNumber("Anio") != null) {
-            anio.setText(String.valueOf(transportista.getNumber("Anio")));
+        nombre.setText(transportista.getString("nombre"));
+        ci_ruc.setText(transportista.getString("cedula"));
+        telefono.setText(transportista.getString("telefono"));
+        placa.setText(transportista.getString("placa"));
+        marca.setText(transportista.getString("marca"));
+        modelo.setText(transportista.getString("modelo"));
+        if (transportista.getNumber("anio") != null) {
+            anio.setText(String.valueOf(transportista.getNumber("anio")));
         }
-        color.setText(transportista.getString("Color"));
-        NumberFormat formatter = new DecimalFormat("#0.00");
-        if (transportista.getNumber("CubicajeMinimo") != null){
-            cubicaje.setText(formatter.format(transportista.getNumber("CubicajeMinimo")));
-        }
-        if (transportista.getNumber("ExtensionMinima") != null) {
-            extension.setText(formatter.format(transportista.getNumber("ExtensionMinima")));
-        }
-        refrigeracion.setChecked(transportista.getBoolean("Refrigerado"));
-        tipo = transportista.getString("TipoTransporte");
-        if (tipo != null){
-            if (tipo.equalsIgnoreCase("furgon")){
-                setTipo(findViewById(R.id.profile_tipo_furgon));
-            }else if (tipo.equalsIgnoreCase("plataforma")){
-                setTipo(findViewById(R.id.profile_tipo_plataforma));
-            }else if (tipo.equalsIgnoreCase("cama baja")){
-                setTipo(findViewById(R.id.profile_tipo_cama_baja));
-            }else if (tipo.equalsIgnoreCase("banera")){
-                setTipo(findViewById(R.id.profile_tipo_banera));
-            }else if (tipo.equalsIgnoreCase("tanquero")){
-                setTipo(findViewById(R.id.profile_tipo_tanquero));
-            }else if (tipo.equalsIgnoreCase("ninera")){
-                setTipo(findViewById(R.id.profile_tipo_ninera));
-            }
-        }else{
-            tipo = "furgon";
-            setTipo(findViewById(R.id.profile_tipo_furgon));
-        }
+        color.setText(transportista.getString("color"));
+        spinner.setSelection(Arrays.asList(getResources().getStringArray(R.array.tipoCamion_values_array)).indexOf(transportista.getString("tipoCamion")));
 
-        ParseFile file = transportista.getParseFile("photo");
-        if (file != null){
-            Picasso.with(this).load(file.getUrl()).into(photo);
-        }
+
+
+
+
+        //TODO add combo box
     }
 
     @Override
@@ -281,11 +129,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_profile_save) {
-            if (imageBitmap != null){
-                saveFile();
-            }else{
-                saveProfile(null);
-            }
+            saveProfile();
             return true;
         }
 
@@ -297,43 +141,21 @@ public class ProfileActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void saveFile(){
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-        byte[] data = stream.toByteArray();
-
-        final ParseFile file = new ParseFile("transportista_image_" + transportista.getObjectId(), data);
-        file.saveInBackground(new SaveCallback() {
-            @Override
-            public void done(ParseException e) {
-                if (e == null){
-                    saveProfile(file);
-                }else{
-                    Log.e("ERROR:",e.getMessage());
-                    //TODO -  Let the user know
-                }
-            }
-        });
-    }
-
-    private void saveProfile(ParseFile file){
-        transportista.put("Nombre",nombre.getText().toString());
-        transportista.put("Cedula",ci_ruc.getText().toString());
-        transportista.put("Telefono", telefono.getText().toString());
-        transportista.put("Placa",placa.getText().toString());
-        transportista.put("Marca",marca.getText().toString());
-        transportista.put("Modelo", modelo.getText().toString());
+    private void saveProfile(){
+        transportista.put("nombre",nombre.getText().toString());
+        transportista.put("cedula",ci_ruc.getText().toString());
+        transportista.put("telefono", telefono.getText().toString());
+        transportista.put("placa",placa.getText().toString());
+        transportista.put("marca",marca.getText().toString());
+        transportista.put("modelo", modelo.getText().toString());
         if (anio.getText().toString().length() > 0){
-            transportista.put("Anio", Integer.parseInt(anio.getText().toString()));
+            transportista.put("anio", Integer.parseInt(anio.getText().toString()));
         }else{
-            transportista.remove("Anio");
+            transportista.remove("anio");
         }
-        transportista.put("Color", color.getText().toString());
-        if (file!=null){
-            transportista.put("photo", file);
-        }
-        transportista.put("TipoTransporte", tipo);
-        transportista.put("Refrigerado", refrigeracion.isChecked());
+        transportista.put("color", color.getText().toString());
+        transportista.put("tipoCamion", getResources().getStringArray(R.array.tipoCamion_values_array)[spinner.getSelectedItemPosition()]);
+
 
         transportista.saveInBackground(new SaveCallback() {
             @Override
@@ -346,27 +168,10 @@ public class ProfileActivity extends AppCompatActivity {
 
                 }else{
                     Log.e("ERROR:",e.getMessage());
-                    //TODO -  Let the user know
+                    Toast toast = Toast.makeText(getBaseContext(), "Ooops!!! Estamos teniendo problemas con nuestros servidores, por favor intente mas tarde o contacte a soporte.", Toast.LENGTH_LONG);
+                    toast.show();
                 }
             }
         });
-    }
-
-    static final int REQUEST_IMAGE_CAPTURE = 1;
-
-    private void dispatchTakePictureIntent() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            imageBitmap = (Bitmap) extras.get("data");
-            photo.setImageBitmap(imageBitmap);
-        }
     }
 }

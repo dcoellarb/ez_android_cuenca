@@ -8,22 +8,12 @@ import com.pubnub.api.Pubnub;
  */
 public class PubnubService {
 
-    public static String NEW_PEDIDOS = "new_pedidos";
-    public static String PEDIDO_TOMADO = "pedido_tomado";
-    public static String PEDIDO_CONFIRMADO = "pedido_confirmado";
-    public static String PEDIDO_CONFIRMADO_PROVEEDOR = "pedido_confirmado_proveedor";
-    public static String PEDIDO_RECHAZADO = "pedido_rechazado";
-    public static String PEDIDO_RECHAZADO_PROVEEDOR = "pedido_rechazado_proveedor";
-    public static String PEDIDO_INICIADO = "pedido_iniciado";
-    public static String PEDIDO_COMPLETADO = "pedido_completado";
-    public static String PEDIDO_CANCELADO = "pedido_cancelado";
-    public static String PEDIDO_CANCELADO_TRANSPORTISTA = "pedido_cancelado_transportista";
-    public static String PEDIDO_CANCELADO_PROVOEEDOR = "pedido_cancelado_proveedor";
-    public static String PEDIDO_CANCELADO_CONFIRMADO = "pedido_cancelado_confirmado";
-    public static String PEDIDO_CANCELADO_CONFIRMADO_TRANSPORTISTA = "pedido_cancelado_confirmado_transportista";
-    public static String PEDIDO_CANCELADO_CONFIRMADO_PROVEEDOR = "pedido_cancelado_confirmado_proveedor";
-    public static String PEDIDO_TIMEOUT = "pedido_timeout";
-    public static String TRANSPORTISTA_HABILITADO = "transportista_habilitado";
+    public static String PEDIDO_CREADO = "pedidoCreado";
+    public static String PEDIDO_ASIGNADO = "pedidoAsignado";
+    public static String PEDIDO_INICIADO = "pedidoIniciado";
+    public static String PEDIDO_FINALIZADO = "pedidoFinalizado";
+    public static String PEDIDO_CANCELADO = "pedidoCancelado";
+    public static String LOCATION_ADDED = "locationAdded";
 
     private String uuid;
     private Pubnub pubnub;

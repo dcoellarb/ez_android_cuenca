@@ -3,12 +3,12 @@ package com.easyruta.easyruta.viewmodel;
 import android.util.Log;
 
 import com.easyruta.easyruta.EasyRutaApplication;
+import com.easyruta.easyruta.R;
 import com.easyruta.easyruta.utils.DataService;
 import com.easyruta.easyruta.utils.RedirectService;
 import com.easyruta.easyruta.viewcontroller.LoginActivity;
 import com.parse.LogInCallback;
 import com.parse.ParseException;
-import com.parse.ParseInstallation;
 import com.parse.ParseUser;
 
 /**
@@ -35,14 +35,18 @@ public class LoginViewModel {
             public void done(ParseUser user, ParseException e) {
                 if (e == null){
                     if (user != null) {
-                        redirectService.redirectByUser(application, activity);
+                        redirectService.redirect(application, activity);
                     } else {
                         Log.e("ERROR", "Error singing up user is null");
-                        activity.showError();
+                        activity.showError("Usuario y/o clave incorrectos.");
                     }
                 } else {
                     Log.e("ERROR", "Error singing up:" + e.getMessage());
-                    activity.showError();
+                    if (e.getCode() == 101){
+                        activity.showError("Usuario y/o clave incorrectos.");
+                    } else {
+                        activity.showError(activity.getString(R.string.error_common));
+                    }
                 }
             }
         });

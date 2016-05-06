@@ -31,4 +31,5 @@
     <string name="addressLine">Direccion : </string>
     <string name="no_gps_message">Obteniendo senal del GPS por favor intente mas tarde.</string>
     <string name="confirmation_cancelar_pedido">Esta seguro que desea cancelar este pedido?</string>
+    <string name="error_common">Ooops!!! Tenemos problemas con nuestros servidores por favor intenta mas tarde</string>
 </resources>

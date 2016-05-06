@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="tipoCamion_values_array">
+        <item>camionate</item>
+        <item>furgonPequeno</item>
+        <item>furgon</item>
+        <item>plataforma</item>
+        <item>camaBaja</item>
+        <item>banera</item>
+        <item>tanquero</item>
+        <item>ninera</item>
+    </string-array>
+    <string-array name="tipoCamion_names_array">
+        <item>Camioneta</item>
+        <item>Furgon Pequeño</item>
+        <item>furgon</item>
+        <item>Plataforma</item>
+        <item>Cama Baja</item>
+        <item>Bañera</item>
+        <item>Tanquero</item>
+        <item>Niñera</item>
+    </string-array>
+</resources>

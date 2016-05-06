@@ -2,7 +2,7 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/grey"
+    android:background="@color/white_smoke"
     android:paddingTop="10dp"
     android:paddingBottom="10dp"
     android:paddingLeft="10dp"
@@ -11,12 +11,12 @@
     android:gravity="center_horizontal">
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:background="@drawable/item_background"
         android:orientation="vertical">
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="330dp"
+            android:layout_height="300dp"
             android:orientation="vertical"
             android:layout_margin="10dp">
             <LinearLayout
@@ -125,9 +125,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="30dp"
                         android:layout_weight="1"
-                        android:textSize="10pt"
-                        android:textColor="@color/orange"
-                        android:text="$350.00"
+                        android:textSize="9pt"
+                        android:textColor="@color/red"
+                        android:text=""
                         android:gravity="bottom|right"/>
                     <TextView
                         android:id="@+id/pedido_comision"
@@ -135,24 +135,26 @@
                         android:layout_height="16dp"
                         android:layout_weight="1"
                         android:textSize="7pt"
-                        android:textColor="@color/orange"
-                        android:text="$12.50"
-                        android:gravity="bottom|right"/>
+                        android:textColor="@color/yellow"
+                        android:text=""
+                        android:gravity="bottom|right"
+                        android:visibility="visible" />
                     <TextView
+                        android:id="@+id/pedido_comision_text"
                         android:layout_width="match_parent"
                         android:layout_height="14dp"
                         android:layout_weight="1"
                         android:textSize="5pt"
                         android:textColor="@color/grey"
                         android:text="Comision"
-                        android:gravity="top|right"/>
+                        android:gravity="top|right"
+                        android:visibility="visible"/>
                 </LinearLayout>
             </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="90dp"
                 android:orientation="horizontal"
-                android:layout_weight="1"
                 android:layout_marginTop="10dp">
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -193,20 +195,6 @@
                             android:textSize="5pt"
                             android:textColor="@color/light_gray"
                             android:text="Entrega:"/>
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1"
-                            android:textSize="5pt"
-                            android:textColor="@color/light_gray"
-                            android:text="Cubicaje:"/>
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1"
-                            android:textSize="5pt"
-                            android:textColor="@color/light_gray"
-                            android:text="Refrigerado:"/>
                         </LinearLayout>
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -246,22 +234,6 @@
                             android:textSize="7pt"
                             android:textColor="@color/grey"
                             android:text="Entrega: Maniana a las 6:00am"/>
-                        <TextView
-                            android:id="@+id/pedido_extra"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1"
-                            android:textSize="7pt"
-                            android:textColor="@color/grey"
-                            android:text="20 m3"/>
-                        <TextView
-                            android:id="@+id/pedido_refrigeracion"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1"
-                            android:textSize="7pt"
-                            android:textColor="@color/grey"
-                            android:text="Si"/>
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -271,49 +243,27 @@
             android:orientation="vertical"
             android:layout_height="1dp"
             android:layout_width="match_parent"
-            android:background="@color/grey"/>
-        <LinearLayout
+            android:background="@color/white_smoke"/>
+        <Button
             android:id="@+id/pedido_iniciar"
             android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:background="@color/orange"
-            android:gravity="center|center">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textSize="10pt"
-                android:text="INICIAR"/>
-        </LinearLayout>
-        <LinearLayout
+            android:background="@color/yellow"
+            android:gravity="center|center"
+            android:text="INICIAR">
+        </Button>
+        <Button
             android:id="@+id/pedido_finalizar"
             android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:background="@color/orange"
+            android:background="@color/yellow"
             android:visibility="gone"
-            android:gravity="center|center">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textSize="10pt"
-                android:text="FINALIZAR"/>
-        </LinearLayout>
-        <LinearLayout
-            android:id="@+id/pedido_cancelar"
-            android:layout_marginTop="10dp"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:background="@color/grey"
-            android:gravity="center|center">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:textSize="10pt"
-                android:text="CANCELAR"/>
-        </LinearLayout>
+            android:gravity="center|center"
+            android:text="FINALIZAR">
+        </Button>
     </LinearLayout>
 </LinearLayout>

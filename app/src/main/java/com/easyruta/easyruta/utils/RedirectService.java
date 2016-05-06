@@ -2,24 +2,27 @@ package com.easyruta.easyruta.utils;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.easyruta.easyruta.EasyRutaApplication;
+import com.easyruta.easyruta.R;
+import com.easyruta.easyruta.utils.exceptions.EzException;
+import com.easyruta.easyruta.utils.exceptions.EzExceptions;
 import com.easyruta.easyruta.viewcontroller.LoginActivity;
 import com.easyruta.easyruta.viewcontroller.MainActivity;
 import com.easyruta.easyruta.viewcontroller.PedidoActivoActivity;
-import com.easyruta.easyruta.viewcontroller.PedidoPendienteActivity;
 import com.parse.GetCallback;
+import com.parse.LogOutCallback;
 import com.parse.ParseException;
 import com.parse.ParseObject;
+import com.parse.ParseUser;
 
-import java.io.Serializable;
-
+import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
-import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 /**
@@ -35,7 +38,7 @@ public class RedirectService {
     protected EasyRutaApplication application;
     protected DataService dataService;
 
-    public void redirectByUser(EasyRutaApplication param_application,Activity param_activity){
+    public void redirect(EasyRutaApplication param_application,Activity param_activity){
         this.activity = param_activity;
         this.application = param_application;
         this.dataService = application.getDataService();
@@ -44,124 +47,159 @@ public class RedirectService {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
 
-        Subscription subscription = observable.subscribe(new Observer<Serializable>() {
-            @Override
-            public void onCompleted() {
-            }
+        this.redirectCheckUserLogged()
+                .flatMap(new Func1<Boolean, Observable<Boolean>>() {
+                    @Override
+                    public Observable<Boolean> call(Boolean v) {
+                        return redirectCheckUserTransportista();
+                    }
+                }).flatMap(new Func1<Boolean, Observable<Boolean>>() {
+                     @Override
+                    public Observable<Boolean> call(Boolean v) {
+                        return redirectCheckUserCurrentPedido();
+                    }
+                }).subscribe(new Observer<Boolean>() {
+                    @Override
+                    public void onCompleted() {
+                        Log.d("TEST","finish");
+                    }
 
-            @Override
-            public void onError(Throwable e) {
-                Log.e("ERROR", e.getMessage());
-            }
+                    @Override
+                    public void onError(Throwable e) {
+                        EzException ex = (EzException)e;
+                        String errorText = application.getString(R.string.error_common);
+                        if (ex != null){
+                            switch (ex.getType()) {
+                                case USER_IS_NOT_CHOFER:
+                                    errorText = "Esta applicacion es unicamente para conductores, estamos trabajando en tu app, contactanos por mas informacion";
+                                    break;
+                                case USER_NOT_LOGGED:
+                                    errorText = "";
+                                    //if (!activity.getClass().getName().equalsIgnoreCase("LoginActivity")
+                                    //        && !activity.getClass().getName().equalsIgnoreCase("LaunchActivity")) {
+                                    //    errorText = "Su session a expirado por favor vuelva a ingresar";
+                                    //}
+                                    break;
+                            }
+                        }
+                        redirectToLogin(errorText);
+                    }
 
-            @Override
-            public void onNext(Serializable serializable) {
-                if (serializable.toString().equalsIgnoreCase(Activities.LOGIN.toString())){
-                    if (!activity.getClass().getName().equalsIgnoreCase("LoginActivity")){
-                        Intent intent = new Intent(activity, LoginActivity.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        activity.startActivity(intent);
+                    @Override
+                    public void onNext(Boolean activo) {
+                        if (activo) {
+                            redirectToPedidoActivo();
+                        } else {
+                            redirectToMain();
+                        }
                     }
-                }
-                if (serializable.toString().equalsIgnoreCase(Activities.MAIN.toString())){
-                    if (!activity.getClass().getName().equalsIgnoreCase("MainActivity")){
-                        Intent intent = new Intent(activity, MainActivity.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        activity.startActivity(intent);
-                    }
-                }
-                if (serializable.toString().equalsIgnoreCase(Activities.PEDIDO_PENDIENTE.toString())){
-                    if (!activity.getClass().getName().equalsIgnoreCase("PeidoPendienteActivity")){
-                        Intent intent = new Intent(activity, PedidoPendienteActivity.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        activity.startActivity(intent);
-                    }
-                }
-                if (serializable.toString().equalsIgnoreCase(Activities.PEDIDO_ACTIVO.toString())){
-                    if (!activity.getClass().getName().equalsIgnoreCase("PedidoActivoActivity")){
-                        Intent intent = new Intent(activity, PedidoActivoActivity.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        activity.startActivity(intent);
-                    }
-                }
-            }
-        });
+                });
     }
 
-    private rx.Observable<String> redirectCheckUserLogged(){
-        return rx.Observable.create(new rx.Observable.OnSubscribe<String>() {
+    private rx.Observable<Boolean> redirectCheckUserLogged(){
+        return rx.Observable.create(new rx.Observable.OnSubscribe<Boolean>() {
             @Override
-            public void call(Subscriber<? super String> subscriber) {
+            public void call(Subscriber<? super Boolean> subscriber) {
                 if (application.getDataService().getUser() == null){
-                    subscriber.onNext(Activities.LOGIN.toString());
+                    subscriber.onError(new EzException(EzExceptions.USER_NOT_LOGGED));
                 }else{
-                    subscriber.onNext("");
-                    subscriber.onCompleted();
+                    subscriber.onNext(true);
                 }
             }
         });
     }
 
-    private rx.Observable<String> redirectCheckUserTransportista(){
-        return rx.Observable.create(new rx.Observable.OnSubscribe<String>() {
+    private rx.Observable<Boolean> redirectCheckUserTransportista(){
+        return rx.Observable.create(new rx.Observable.OnSubscribe<Boolean>() {
             @Override
-            public void call(final Subscriber<? super String> subscriber) {
+            public void call(final Subscriber<? super Boolean> subscriber) {
                 if (application.getDataService().getTransportista() == null){
                     dataService.getUserTransportista(new GetCallback<ParseObject>() {
                         @Override
                         public void done(ParseObject object, ParseException e) {
-                            if (e==null){
-                                dataService.setTransportista(object);
-                                if (object.getParseObject("proveedor") != null){
-                                    dataService.setProveedor(object.getParseObject("proveedor"));
-                                }
-                                subscriber.onNext("");
-                                subscriber.onCompleted();
-                            }else{
+                            if (e != null) {
                                 Log.e("ERROR",e.getMessage());
+                                if (e.getCode() == 101) {
+                                    subscriber.onError(new EzException(EzExceptions.USER_IS_NOT_CHOFER));
+                                } else {
+                                    subscriber.onError(e);
+                                }
+                            } else {
+                                dataService.setTransportista(object);
+                                dataService.setProveedor(object.getParseObject("transportista"));
+                                subscriber.onNext(true);
                             }
                         }
                     });
                 }else{
-                    subscriber.onNext("");
-                    subscriber.onCompleted();
+                    //TODO THIS SHOULD BE REMOVED ONCE IS THE APP SUPPORTS OTHER ROLES
+                    subscriber.onError(new EzException(EzExceptions.USER_IS_NOT_CHOFER));
                 }
             }
         });
     }
 
-    private rx.Observable<String> redirectCheckUserCurrentPedido(){
-        return rx.Observable.create(new rx.Observable.OnSubscribe<String>() {
+    private rx.Observable<Boolean> redirectCheckUserCurrentPedido(){
+        return rx.Observable.create(new rx.Observable.OnSubscribe<Boolean>() {
             @Override
-            public void call(final Subscriber<? super String> subscriber) {
+            public void call(final Subscriber<? super Boolean> subscriber) {
                 application.getDataService().getTransportistaCurrentPedido(new GetCallback<ParseObject>() {
                     @Override
                     public void done(ParseObject object, ParseException e) {
-                        String activity_name = Activities.MAIN.toString();
-                        if (e == null){
-                            if (object != null) {
-                                SharedPreferences.Editor prefs = activity.getSharedPreferences("easyruta", activity.MODE_PRIVATE).edit();
-                                prefs.putString("pedido", object.getObjectId().toString());
-                                prefs.putString("estado", dataService.PENDIENTE_CONFIRMACION);
-                                prefs.commit();
-
-                                if (object.get("Estado").toString().equalsIgnoreCase(application.getDataService().PENDIENTE_CONFIRMACION)){
-                                    activity_name = Activities.PEDIDO_PENDIENTE.toString();
-                                }
-                                if (object.get("Estado").toString().equalsIgnoreCase(application.getDataService().ACTIVO)
-                                        || object.get("Estado").toString().equalsIgnoreCase(application.getDataService().EN_CURSO)){
-                                    activity_name = Activities.PEDIDO_ACTIVO.toString();
-                                }
+                        if (e != null){
+                            Log.e("ERROR",e.getMessage());
+                            if (e.getCode() == 101) {
+                                subscriber.onNext(false);
+                            } else {
+                                subscriber.onError(e);
                             }
                         } else {
-                            Log.e("ERROR", e.getMessage());
+                            dataService.setPedido(object);
+                            if (object != null){
+                                subscriber.onNext(true);
+                            } else {
+                                subscriber.onNext(false);
+                            }
+                            subscriber.onCompleted();
                         }
-                        subscriber.onNext(activity_name);
-                        subscriber.onCompleted();
                     }
                 });
             }
         });
+    }
+
+    private void redirectToLogin(final String errorMessage) {
+        ParseUser.getCurrentUser().logOutInBackground(new LogOutCallback() {
+            @Override
+            public void done(ParseException e) {
+                if (!activity.getClass().getName().equalsIgnoreCase("LoginActivity")){
+                    Intent intent = new Intent(activity, LoginActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    Bundle b = new Bundle();
+                    b.putString("error", errorMessage);
+                    intent.putExtras(b);
+                    activity.startActivity(intent);
+                } else {
+                    ((LoginActivity)activity).showError(errorMessage);
+                }
+            }
+        });
+    }
+
+    private void redirectToMain() {
+        if (!activity.getClass().getName().equalsIgnoreCase("MainActivity")){
+            Intent intent = new Intent(activity, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            activity.startActivity(intent);
+        }
+    }
+
+    private void redirectToPedidoActivo() {
+        if (!activity.getClass().getName().equalsIgnoreCase("PedidoActivoActivity")){
+            Intent intent = new Intent(activity, PedidoActivoActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            activity.startActivity(intent);
+        }
     }
 
 }

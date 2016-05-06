@@ -12,26 +12,27 @@ public class utils {
         String result = "";
 
         String day = "";
+        if (date != null){
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
 
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
+            Calendar today = Calendar.getInstance();
+            Calendar yesterday = Calendar.getInstance();
+            yesterday.add(Calendar.DATE, -1);
+            Calendar tomorrow = Calendar.getInstance();
+            tomorrow.add(Calendar.DATE, 1);
 
-        Calendar today = Calendar.getInstance();
-        Calendar yesterday = Calendar.getInstance();
-        yesterday.add(Calendar.DATE, -1);
-        Calendar tomorrow = Calendar.getInstance();
-        tomorrow.add(Calendar.DATE, 1);
-
-        if (calendar.get(Calendar.YEAR) == today.get(Calendar.YEAR) && calendar.get(Calendar.MONTH) == today.get(Calendar.MONTH) && calendar.get(Calendar.DATE) == today.get(Calendar.DATE)){
-            day = "Hoy";
-        }else if (calendar.get(Calendar.YEAR) == yesterday.get(Calendar.YEAR) && calendar.get(Calendar.MONTH) == yesterday.get(Calendar.MONTH) && calendar.get(Calendar.DATE) == yesterday.get(Calendar.DATE)){
-            day = "Ayer";
-        }else if (calendar.get(Calendar.YEAR) == tomorrow.get(Calendar.YEAR) && calendar.get(Calendar.MONTH) == tomorrow.get(Calendar.MONTH) && calendar.get(Calendar.DATE) == tomorrow.get(Calendar.DATE)) {
-            day = "Manana";
-        }else{
-            day = monthName(calendar.get(Calendar.MONTH)) + " " + calendar.get(Calendar.DATE);
+            if (calendar.get(Calendar.YEAR) == today.get(Calendar.YEAR) && calendar.get(Calendar.MONTH) == today.get(Calendar.MONTH) && calendar.get(Calendar.DATE) == today.get(Calendar.DATE)){
+                day = "Hoy";
+            }else if (calendar.get(Calendar.YEAR) == yesterday.get(Calendar.YEAR) && calendar.get(Calendar.MONTH) == yesterday.get(Calendar.MONTH) && calendar.get(Calendar.DATE) == yesterday.get(Calendar.DATE)){
+                day = "Ayer";
+            }else if (calendar.get(Calendar.YEAR) == tomorrow.get(Calendar.YEAR) && calendar.get(Calendar.MONTH) == tomorrow.get(Calendar.MONTH) && calendar.get(Calendar.DATE) == tomorrow.get(Calendar.DATE)) {
+                day = "Manana";
+            }else{
+                day = monthName(calendar.get(Calendar.MONTH)) + " " + calendar.get(Calendar.DATE);
+            }
+            result = day + " a las " + formatTime(calendar.get(Calendar.HOUR)) + ":" + formatTime(calendar.get(Calendar.MINUTE)) + formatAMPM(calendar.get(Calendar.AM_PM));
         }
-        result = day + " a las " + formatTime(calendar.get(Calendar.HOUR)) + ":" + formatTime(calendar.get(Calendar.MINUTE)) + formatAMPM(calendar.get(Calendar.AM_PM));
         return result;
     }
 
@@ -92,6 +93,17 @@ public class utils {
             result = "am";
         }
         return result;
+    }
+
+    public static String formatPeso(String peso){
+        if (peso != null){
+            if (peso == "1"){
+                return "Menos de una toneladas";
+            }else{
+                return peso.replace("_"," a ") + " toneladas";
+            }
+        }
+        return "";
     }
 
 }
