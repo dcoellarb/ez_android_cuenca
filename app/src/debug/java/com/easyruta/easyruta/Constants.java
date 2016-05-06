@@ -11,4 +11,6 @@ public class Constants {
 
     public static String PUBNUB_PUB_KEY = "pub-c-dbd199d2-5422-4ef9-95ac-5565e99d8036";
     public static String PUBNUB_SUB_KEY = "sub-c-5fda96b4-7848-11e5-b539-0619f8945a4f";
+
+    public static String EZ_URL = "http://easyruta-qa.s3-website-us-east-1.amazonaws.com";
 }

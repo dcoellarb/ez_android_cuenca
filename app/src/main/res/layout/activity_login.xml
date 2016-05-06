@@ -49,6 +49,7 @@
             android:layout_height="wrap_content"
             android:text="Si aun no tes has registrado ingresa a:"/>
         <TextView
+            android:id="@+id/easyruta_link"
             android:layout_marginTop="10dp"
             android:layout_marginLeft="30dp"
             android:layout_marginRight="30dp"

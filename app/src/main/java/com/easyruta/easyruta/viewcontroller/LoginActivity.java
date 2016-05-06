@@ -1,6 +1,8 @@
 package com.easyruta.easyruta.viewcontroller;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -8,6 +10,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.easyruta.easyruta.Constants;
 import com.easyruta.easyruta.R;
 import com.easyruta.easyruta.viewmodel.LoginViewModel;
 
@@ -45,6 +48,14 @@ public class LoginActivity extends Activity{
             @Override
             public void onClick(View view) {
                 viewModel.Login(login.getText().toString(), password.getText().toString());
+            }
+        });
+
+        findViewById(R.id.easyruta_link).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(Constants.EZ_URL));
+                startActivity(browserIntent);
             }
         });
     }
