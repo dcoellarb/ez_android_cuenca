@@ -34,6 +34,8 @@ public class PedidoActivoActivity extends Activity {
     private Activity activity;
     private PedidoActivoViewModel viewModel;
     private ImageView navImageView;
+    private Button iniciarCarga;
+    private Button marcarLlegada;
     private Button iniciar;
     private Button finalizar;
     private LinearLayout cancelar;
@@ -84,8 +86,22 @@ public class PedidoActivoActivity extends Activity {
             }
         });
 
+        iniciarCarga = (Button) findViewById(R.id.pedido_iniciar_carga);
+        marcarLlegada = (Button) findViewById(R.id.pedido_marcar_llegada);
         iniciar = (Button) findViewById(R.id.pedido_iniciar);
         finalizar = (Button) findViewById(R.id.pedido_finalizar);
+        iniciarCarga.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                viewModel.iniciarCargaPedido();
+            }
+        });
+        marcarLlegada.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                viewModel.marcarLlegadaPedido();
+            }
+        });
         iniciar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -165,7 +181,9 @@ public class PedidoActivoActivity extends Activity {
     }
 
     public void toggleEstado(){
+        iniciarCarga.setVisibility(View.GONE);
         iniciar.setVisibility(View.GONE);
+        marcarLlegada.setVisibility(View.VISIBLE);
         finalizar.setVisibility(View.VISIBLE);
         navImageView.setVisibility(View.VISIBLE);
     }

@@ -47,6 +47,58 @@ public class PedidoActivoViewModel {
         this.activity.setPedido(dataService.getPedido());
     }
 
+    public void iniciarCargaPedido(){
+        dataService.iniciarCargaPedido(pedido, new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                if (e == null) {
+                    dataService.getPedido(pedido.getObjectId().toString(), new GetCallback<ParseObject>() {
+                        @Override
+                        public void done(ParseObject object, ParseException e) {
+                            pedido = object;
+                        }
+                    });
+
+                    JSONObject json = new JSONObject();
+                    try {
+                        json.put("id",pedido.getObjectId().toString());
+                        json.put("uuid", pubnubService.getUuid());
+                    } catch (JSONException e1) {
+                        e1.printStackTrace();
+                    }
+
+                    application.getPubnubService().getPubnub().publish(pubnubService.PEDIDO_CARGA_INICIADA,json, new Callback() {});
+                }
+            }
+        });
+    }
+
+    public void marcarLlegadaPedido(){
+        dataService.marcarLlegadaPedido(pedido, new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                if (e == null) {
+                    dataService.getPedido(pedido.getObjectId().toString(), new GetCallback<ParseObject>() {
+                        @Override
+                        public void done(ParseObject object, ParseException e) {
+                            pedido = object;
+                        }
+                    });
+
+                    JSONObject json = new JSONObject();
+                    try {
+                        json.put("id",pedido.getObjectId().toString());
+                        json.put("uuid", pubnubService.getUuid());
+                    } catch (JSONException e1) {
+                        e1.printStackTrace();
+                    }
+
+                    application.getPubnubService().getPubnub().publish(pubnubService.PEDIDO_LLEGADA_MARCADA,json, new Callback() {});
+                }
+            }
+        });
+    }
+
     public void iniciarPedido(){
         dataService.iniciarPedido(pedido, new SaveCallback() {
             @Override

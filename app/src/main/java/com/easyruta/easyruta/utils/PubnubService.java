@@ -11,6 +11,8 @@ public class PubnubService {
     public static String PEDIDO_CREADO = "pedidoCreado";
     public static String PEDIDO_ASIGNADO = "pedidoAsignado";
     public static String PEDIDO_INICIADO = "pedidoIniciado";
+    public static String PEDIDO_CARGA_INICIADA = "pedidoCargaIniciada";
+    public static String PEDIDO_LLEGADA_MARCADA = "pedidoLlegadaMarcada";
     public static String PEDIDO_FINALIZADO = "pedidoFinalizado";
     public static String PEDIDO_CANCELADO = "pedidoCancelado";
     public static String LOCATION_ADDED = "locationAdded";

@@ -246,6 +246,17 @@
             android:layout_width="match_parent"
             android:background="@color/white_smoke"/>
         <Button
+            android:id="@+id/pedido_iniciar_carga"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:background="@color/blue_gray"
+            android:gravity="center|center"
+            android:textColor="@color/white"
+            android:text="Marcar Inicio Carga">
+        </Button>
+        <Button
             android:id="@+id/pedido_iniciar"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
@@ -254,6 +265,18 @@
             android:background="@color/yellow"
             android:gravity="center|center"
             android:text="INICIAR">
+        </Button>
+        <Button
+            android:id="@+id/pedido_marcar_llegada"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:background="@color/blue_gray"
+            android:gravity="center|center"
+            android:textColor="@color/white"
+            android:visibility="gone"
+            android:text="Marca Llegada">
         </Button>
         <Button
             android:id="@+id/pedido_finalizar"

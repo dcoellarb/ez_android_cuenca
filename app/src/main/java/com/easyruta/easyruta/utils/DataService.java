@@ -141,7 +141,7 @@ public class DataService {
     public void getUserTransportista(GetCallback<ParseObject> callback){
         ParseQuery<ParseObject> query = ParseQuery.getQuery("Chofer");
         query.include("transportista");
-        query.whereEqualTo("user", this.user);
+        query.whereEqualTo("user", this.getUser());
         query.getFirstInBackground(callback);
     }
     public void getTransportistaCurrentPedido(GetCallback<ParseObject> callback){
@@ -211,6 +211,14 @@ public class DataService {
     public void iniciarPedido(ParseObject pedido, SaveCallback callback){
         pedido.put("horaInicio", new Date());
         pedido.put("estado", dataService.EN_CURSO);
+        pedido.saveInBackground(callback);
+    }
+    public void iniciarCargaPedido(ParseObject pedido, SaveCallback callback){
+        pedido.put("horaInicioCarga", new Date());
+        pedido.saveInBackground(callback);
+    }
+    public void marcarLlegadaPedido(ParseObject pedido, SaveCallback callback){
+        pedido.put("horaLlegada", new Date());
         pedido.saveInBackground(callback);
     }
     public void finalizarPedido(ParseObject pedido, final SaveCallback callback){
